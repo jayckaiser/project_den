@@ -2,11 +2,13 @@ import calendar
 import kaleido
 import pandas as pd
 import sqlparse
-from typing import List, Optional, Union
+from typing import List, Union
 
 import plotly.express as px  # Cannot be used to make subplots.
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+from project_den.util import sql_get, time_filter
 
 
 ### Figure settings (should not need to be changed)
@@ -35,42 +37,6 @@ ZOR_COLORS = {
     'yellow': 'palegoldenrod',
     None    : 'black',  # We should never see this one on charts!
 }
-
-
-### SQL Helpers
-def sql_get(data: Union[str, pd.DataFrame]) -> Union['column', 'DataFrame']:
-        """
-        Return a singleton, a list, or a dataframe
-        """
-        if isinstance(data, str):
-            data = sql(data).df()
-
-        # Optimize return type by data shape
-        # if data.shape == (1, 1):  # Return a singleton unnested
-        #   return data.iat[0, 0]
-        if data.shape[1] == 1:  # Return a single column as a list
-            return data.iloc[:,0].tolist()
-        else:
-            return data
-
-def time_filter(years: List[int], months: List[int]) -> str:
-    """
-    school_year IN ('{year_str}')
-    AND MONTH(visit_date) IN ('{month_str}')
-    """
-    # Force to strings for easy-joining.
-    years = list(map(str, years))
-    months = list(map(str, months))
-
-    # Build the filter to return
-    time_clauses = []
-    if years:
-        time_clauses.append("school_year IN ('{}')".format("','".join(years)))
-    if months:
-        time_clauses.append("MONTH(visit_date) IN ('{}')".format("', '".join(months)))
-
-    filter_clause = " AND ".join(time_clauses)
-    return filter_clause
 
 
 ### TitoFig class
