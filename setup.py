@@ -2,20 +2,17 @@ import os
 import pathlib
 import setuptools
 
-# The directory containing this file
+# Retrieve the README and requirements into the setup.
 HERE = pathlib.Path(__file__).parent
-
-# The text of the README file
 README = (HERE / "README.md").read_text()
-
-# automatically captured required modules for install_requires in requirements.txt
+ 
 with open(os.path.join(HERE, 'requirements.txt'), encoding='utf-8') as fp:
     all_reqs = fp.readlines()
 
 setuptools.setup (
     name = 'project_den',
     description = 'Transforms Project DEN time-in and time-out data into a dashboard visualization.',
-    version = 0.0.1,
+    version = '0.0.1',
     packages = setuptools.find_namespace_packages(include=['project_den', 'project_den.*']),
     include_package_data=True,
     install_requires = all_reqs,
