@@ -56,9 +56,11 @@ def clean_name(col: str, dashes_to_spaces: bool = False) -> str:
 
     if dashes_to_spaces:
         col = f"""replace("{col}", '-', ' ')"""
+    else:
+        col = f""" "{col}" """
 
     # Remove anything non-alphabetic (globally)
-    return f"""lower(regexp_replace("{col}", '[^a-zA-Z]', '', 'g'))"""
+    return f"""lower(regexp_replace({col}, '[^a-zA-Z]', '', 'g'))"""
 
 def build_unique_id(first_col: str, last_col: str, num_chars: int = 1) -> str:
 
