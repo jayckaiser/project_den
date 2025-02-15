@@ -1,0 +1,10 @@
+duckdb==0.10.3
+duckdb-engine==0.13.1
+kaleido
+lida==0.0.9
+jupysql==0.10.12
+matplotlib
+notebook==6.5.5
+pandas
+plotly==5.3.1
+sqlparse
