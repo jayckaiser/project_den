@@ -4,9 +4,6 @@ import pandas as pd
 import sqlparse
 from typing import List, Optional, Union
 
-from ipywidgets import widgets
-from IPython.display import display, Markdown
-
 import plotly.express as px  # Cannot be used to make subplots.
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
