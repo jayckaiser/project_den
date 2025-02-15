@@ -2,13 +2,13 @@
 import duckdb
 import glob
 import os
-from duckdb import sql
 
 
 ### Loader methods
 # TODO: Load as JSONL to set nulls in schema changes.
-def csv_to_raw(path: str) -> 'DataFrame':
-    return sql(f"""
+def sql_csv_to_raw(path: str) -> str:
+
+    full_query = f"""
 
     select * from read_csv(
         '{path}',
@@ -18,7 +18,9 @@ def csv_to_raw(path: str) -> 'DataFrame':
         AUTO_DETECT=True
     )
 
-    """)
+    """
+
+    return full_query
 
 
 # Macro helpers for transforming from raw
@@ -77,15 +79,13 @@ def build_unique_id(first_col: str, last_col: str, num_chars: int = 1) -> str:
     """
 
 
-def raw_to_clean(
-    _raw_visit_data: 'DataFrame'  # Hard-coded variable name for string interpolation in SQL query
-) -> 'DataFrame':
+def sql_raw_to_clean(raw_data_name: str) -> str:
 
     date_format: str = "%Y-%m-%d"
     timestamp_format1: str = "%Y-%m-%d %H:%M:%S %p"
     timestamp_format2: str = "%Y-%m-%d %H:%M"
 
-    return sql(f"""
+    full_query = f"""
 
     select
         -- Datetime columns
@@ -140,6 +140,8 @@ def raw_to_clean(
         -- strptime("Timestamp", '%m/%d/%Y %H:%M:%S') as _updated_at,  -- Different format
         filename as _filepath,
 
-    from _raw_visit_data;
+    from {raw_data_name};
 
-    """)
+    """
+
+    return full_query
