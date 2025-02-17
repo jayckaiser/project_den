@@ -1,6 +1,7 @@
 import calendar
 import pandas as pd
 import sqlparse
+from duckdb import sql
 from typing import List, Union
 
 import plotly.graph_objects as go
