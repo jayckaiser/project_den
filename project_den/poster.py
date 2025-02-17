@@ -10,7 +10,6 @@ from project_den.tito_fig import TitoFig
 
 
 ### Figure settings (should not need to be changed)
-CELL_FONT_SIZE = 12  # How big are the cells in the tables?
 
 # What should the grades be called in charts?
 GRADE_LABELS = {

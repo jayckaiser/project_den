@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 
 
 class TitoFig:
+    CELL_FONT_SIZE = 12  # How big are the cells in the tables?
+
     def __init__(self, data: Union[str, pd.DataFrame]):
         if isinstance(data, str):
             self.sql = sqlparse.format(data, reindent=True)
@@ -42,7 +44,7 @@ class TitoFig:
         )])
 
         self.figure.update_traces(
-            cells_font={'size': CELL_FONT_SIZE},
+            cells_font={'size': self.CELL_FONT_SIZE},
         )
 
         return self.figure
