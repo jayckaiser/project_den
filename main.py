@@ -1,3 +1,5 @@
+import os
+
 from project_den import transform
 from project_den import poster
 from project_den.util import sql
@@ -5,14 +7,9 @@ from project_den.util import sql
 import logging
 logging.basicConfig(level=logging.INFO)
 
-
 PATH_TO_DATA: str = "./data/FINAL_SampleData.csv"
 POSTER_TITLE: str =  "Tito's Den Visit Overview"
-
-
-def to_df(_sql: str):
-    _sql: str = sqlparse.format(_sql, reindent=True)
-    return sql(_sql).df()
+IMAGES_DIR: str = "./data"
 
 
 def main():
@@ -30,8 +27,10 @@ def main():
     logging.debug(visit_data)
 
     # Create poster and save to disk.
-    output_poster = poster.build_poster(visit_data, poster_title=POSTER_TITLE)
-    
+    POSTER = poster.build_poster(visit_data, poster_title=POSTER_TITLE)
+    POSTER.write_image(os.path.join(IMAGES_DIR, 'overview.pdf'))
+    POSTER.write_html(os.path.join(IMAGES_DIR, 'overview.html'))
+    logging.info(f"PDF and HTML of poster are saved: {IMAGES_DIR}")
 
     return
 
