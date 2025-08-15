@@ -1,24 +1,23 @@
 import calendar
-import pandas as pd
-import sqlparse
-from duckdb import sql
 from typing import List, Union
 
 import plotly.graph_objects as go
 
 
 class TitoFig:
+    """
+    TODO:
+        This class feels unnecessarily complicated.
+        This is a DataFrame with Figure output options.
+        Generate figures each time. Do not make into class attributes.
+    """
     CELL_FONT_SIZE = 12  # How big are the cells in the tables?
 
-    def __init__(self, data: Union[str, pd.DataFrame]):
-        if isinstance(data, str):
-            self.sql = sqlparse.format(data, reindent=True)
-            self.data = sql(self.sql).df()
-        elif isinstance(data, pd.DataFrame):
-            self.sql = None
-            self.data = data
-        else:
-            raise Exception(f"Unknown {self.__name__} datatype: {type(data)}")
+    def __init__(self, data: Union[str, 'pd.DataFrame']):
+        """
+
+        """
+        self.data = data
 
         # Make figure and title attributes for easy access (TODO: Streamline further)
         self.title = None
@@ -30,8 +29,8 @@ class TitoFig:
 
     def table(self,
         title: str,
-        header: Union[str, list, pd.Series],
-        values: Union[str, list, pd.Series, pd.DataFrame],
+        header: Union[str, list, 'pd.Series'],
+        values: Union[str, list, 'pd.Series', 'pd.DataFrame'],
         **kwargs
     ):
         self.title = title
@@ -51,8 +50,8 @@ class TitoFig:
 
     def pie(self,
         title: str,
-        labels: Union[str, list, pd.Series],
-        values: Union[str, list, pd.Series],
+        labels: Union[str, list, 'pd.Series'],
+        values: Union[str, list, 'pd.Series'],
         colors: list,
         **kwargs
     ):
@@ -79,9 +78,9 @@ class TitoFig:
 
     def bar(self,
         title: str,
-        labels: Union[str, list, pd.Series],
-        x: Union[str, list, pd.Series],
-        y: Union[str, list, pd.Series],
+        labels: Union[str, list, 'pd.Series'],
+        x: Union[str, list, 'pd.Series'],
+        y: Union[str, list, 'pd.Series'],
         colors: list,
         **kwargs
     ):

@@ -1,5 +1,3 @@
-## Python imports and SqlMagic extensions
-import duckdb
 import glob
 import os
 
