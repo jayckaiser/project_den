@@ -67,24 +67,29 @@ def build_unique_id(first_col: str, last_col: str, num_chars: int = 1) -> str:
 
 def sql_raw_to_clean(raw_data_name: str) -> str:
 
-    date_format1: str = "%Y-%m-%d"
-    date_format2: str = "%Y-%m-%d %H:%M:%S"
-    timestamp_format1: str = "%Y-%m-%d %H:%M:%S %p"
-    timestamp_format2: str = "%Y-%m-%d %H:%M"
+    date_formats: list[str] = [
+        "%Y-%m-%d", 
+        "%Y-%m-%d %H:%M:%S",
+    ]
+
+    timestamp_formats: list[str] = [
+        "%Y-%m-%d %H:%M:%S %p",
+        "%Y-%m-%d %H:%M",
+    ]
 
     full_query = f"""
 
     select
         -- Datetime columns
-        try_strptime("Date of Visit"::text, ['{date_format1}', '{date_format2}']) as visit_date,
+        try_strptime("Date of Visit"::text, ['{"', '".join(date_formats)}'])::date as visit_date,
 
         CASE WHEN MONTH(visit_date) >= 9
             THEN YEAR(visit_date) + 1
             ELSE YEAR(visit_date)
         END::text AS school_year,
 
-        try_strptime(concat("visit_date", ' ', "Time in"), ['{timestamp_format1}', '{timestamp_format2}']) as raw_time_in,
-        try_strptime(concat("visit_date", ' ', "Time out"), ['{timestamp_format1}', '{timestamp_format2}']) as raw_time_out,
+        try_strptime(concat("visit_date", ' ', "Time in"), ['{"', '".join(timestamp_formats)}']) as raw_time_in,
+        try_strptime(concat("visit_date", ' ', "Time out"), ['{"', '".join(timestamp_formats)}']) as raw_time_out,
 
         -- This section fixes input-mistake where AM and PM is chosen incorrectly.
         {fix_am_pm("raw_time_in" )} AS time_in,
