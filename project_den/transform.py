@@ -22,20 +22,6 @@ def sql_csv_to_raw(path: str) -> str:
 
 
 # Macro helpers for transforming from raw
-def force_datetime_format(date_col: str, time_col: str) -> str:
-
-    timestamp_format1: str = "%Y-%m-%d %H:%M:%S %p"
-    timestamp_format2: str = "%Y-%m-%d %H:%M"
-
-    return f"""
-
-    coalesce(
-        try_strptime(concat("{date_col}", ' ', "{time_col}" ), '{timestamp_format1}'),
-        try_strptime(concat("{date_col}", ' ', "{time_col}" ), '{timestamp_format2}')
-    )
-    
-    """
-
 def fix_am_pm(col: str) -> str:
 
     return f"""
@@ -81,7 +67,8 @@ def build_unique_id(first_col: str, last_col: str, num_chars: int = 1) -> str:
 
 def sql_raw_to_clean(raw_data_name: str) -> str:
 
-    date_format: str = "%Y-%m-%d"
+    date_format1: str = "%Y-%m-%d"
+    date_format2: str = "%Y-%m-%d %H:%M:%S"
     timestamp_format1: str = "%Y-%m-%d %H:%M:%S %p"
     timestamp_format2: str = "%Y-%m-%d %H:%M"
 
@@ -89,15 +76,15 @@ def sql_raw_to_clean(raw_data_name: str) -> str:
 
     select
         -- Datetime columns
-        strptime("Date of Visit"::text, '{date_format}')::date as visit_date,
+        try_strptime("Date of Visit"::text, ['{date_format1}', '{date_format2}']) as visit_date,
 
         CASE WHEN MONTH(visit_date) >= 9
             THEN YEAR(visit_date) + 1
             ELSE YEAR(visit_date)
         END::text AS school_year,
 
-        {force_datetime_format("Date of Visit", "Time in" )} AS raw_time_in,
-        {force_datetime_format("Date of Visit", "Time out")} AS raw_time_out,
+        try_strptime(concat("visit_date", ' ', "Time in"), ['{timestamp_format1}', '{timestamp_format2}']) as raw_time_in,
+        try_strptime(concat("visit_date", ' ', "Time out"), ['{timestamp_format1}', '{timestamp_format2}']) as raw_time_out,
 
         -- This section fixes input-mistake where AM and PM is chosen incorrectly.
         {fix_am_pm("raw_time_in" )} AS time_in,
