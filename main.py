@@ -1,4 +1,5 @@
 import os
+import sys
 
 from project_den import transform
 from project_den import poster
@@ -19,12 +20,12 @@ def main():
     sql_raw_visit_data = transform.sql_csv_to_raw(PATH_TO_DATA)
     logging.debug(f"sql_csv_to_raw('{PATH_TO_DATA}')\n{sql_raw_visit_data}")
     raw_visit_data = sql(sql_raw_visit_data)
-    logging.debug(raw_visit_data)
+    logging.info(raw_visit_data.iloc[:5])
 
     sql_visit_data = transform.sql_raw_to_clean("raw_visit_data")
     logging.debug(f"sql_raw_to_clean('raw_visit_data')\n{sql_visit_data}")
     visit_data = sql(sql_visit_data)
-    logging.debug(visit_data)
+    logging.info(visit_data.iloc[:5])
 
     # Create poster and save to disk.
     POSTER = poster.build_poster(visit_data, poster_title=POSTER_TITLE)
@@ -36,4 +37,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+   sys.exit(main()) 
