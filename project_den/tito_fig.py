@@ -3,6 +3,8 @@ from typing import List, Union
 
 import plotly.graph_objects as go
 
+from project_den.util import sql
+
 
 class TitoFig:
     """
@@ -14,14 +16,7 @@ class TitoFig:
     CELL_FONT_SIZE = 12  # How big are the cells in the tables?
 
     def __init__(self, data: Union[str, 'pd.DataFrame']):
-        """
-
-        """
-        self.data = data
-
-        # Make figure and title attributes for easy access (TODO: Streamline further)
-        self.title = None
-        self.figure = None
+        self.data = sql(data)
 
     @property
     def figdata(self):

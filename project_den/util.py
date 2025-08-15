@@ -1,4 +1,5 @@
-from duckdb import sql
+import duckdb
+import sqlparse
 
 from typing import List, Union
 from typing import TYPE_CHECKING
@@ -7,12 +8,20 @@ if TYPE_CHECKING:
     from pandas import DataFrame
 
 
+def sql(query: Union[str, 'DataFrame']) -> 'DataFrame':
+    # QoL to use remove dataframe type-checking
+    if not isinstance(query, str):
+        return query
+
+    query: str = sqlparse.format(query, reindent=True)
+    return duckdb.sql(query).df()
+
 def sql_get(data: Union[str, 'DataFrame']) -> Union['column', 'DataFrame']:
     """
     Return a singleton, a list, or a dataframe
     """
-    if isinstance(data, str):
-        data = sql(data).df()
+    # Force to dataframe if a string
+    data = sql(data)
 
     # Optimize return type by data shape
     # if data.shape == (1, 1):  # Return a singleton unnested
