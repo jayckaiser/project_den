@@ -2,8 +2,8 @@ duckdb==0.10.3
 duckdb-engine==0.13.1
 kaleido==0.2.1
 lida==0.0.9
-matplotlib
-numpy==1.23.5
-pandas==2.3.1
+matplotlib==3.10.5
+numpy==1.26.4
+pandas==2.2.1
 plotly==5.3.1
 sqlparse==0.5.3
