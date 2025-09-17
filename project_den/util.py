@@ -1,20 +1,26 @@
 import duckdb
 import sqlparse
 
-from typing import List, Union
+from typing import List, Optional, Union
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pandas import DataFrame
 
 
-def sql(query: Union[str, 'DataFrame']) -> 'DataFrame':
+def sql(query: Union[str, 'DataFrame'], name: Optional[str] = None) -> 'DataFrame':
     # QoL to use remove dataframe type-checking
-    if not isinstance(query, str):
-        return query
-
-    query: str = sqlparse.format(query, reindent=True)
-    return duckdb.sql(query).df()
+    if isinstance(query, str):
+        query: str = sqlparse.format(query, reindent=True)
+        dataframe = duckdb.sql(query).df()
+    else:
+        dataframe = query
+    
+    # Avoids trying to fix CatalogErrors 
+    if name:
+        duckdb.register(name, dataframe)
+    
+    return dataframe
 
 def sql_get(data: Union[str, 'DataFrame']) -> Union['column', 'DataFrame']:
     """

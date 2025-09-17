@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import plotly.graph_objects as go
 
-from project_den.util import sql_get, time_filter
+from project_den.util import sql, sql_get, time_filter
 from project_den.tito_fig import TitoFig
 
 
@@ -54,12 +54,15 @@ def build_poster(
     TODO: Incorporate year and month arguments.
     """
 
+    # This should not be necessary, but encountering CatalogErrors
+    _visit_data = sql(_visit_data, "_visit_data")
+
     # Total Visit Count and Total Long Visit Count
     totals = TitoFig(f"""
         SELECT
-        COUNT(*) AS count,
-        COUNT(*) FILTER (WHERE visit_length_sec >= {LONG_VISIT_LENGTH_MIN} * 60) AS long_visits,
-        ROUND(AVG(visit_length_sec) / 60, 1) AS avg_visit_min,
+            COUNT(*) AS count,
+            COUNT(*) FILTER (WHERE visit_length_sec >= {LONG_VISIT_LENGTH_MIN} * 60) AS long_visits,
+            ROUND(AVG(visit_length_sec) / 60, 1) AS avg_visit_min,
         FROM _visit_data
     """)
 
@@ -71,17 +74,17 @@ def build_poster(
             "Average Visit Length (min.)"
         ],
         values=[
-        totals.data['count'],
-        totals.data['long_visits'],
-        totals.data['avg_visit_min']
+            totals.data['count'],
+            totals.data['long_visits'],
+            totals.data['avg_visit_min']
         ],
     )
 
     # Top N busiest days
     by_day = TitoFig(f"""
         SELECT
-        STRFTIME(visit_date, '%m/%d/%Y') AS date,
-        COUNT(*) AS count
+            STRFTIME(visit_date, '%m/%d/%Y') AS date,
+            COUNT(*) AS count
         FROM _visit_data
         GROUP BY date
         ORDER BY count DESC
@@ -90,16 +93,16 @@ def build_poster(
 
     by_day.table(
         title=f"Top {SHOW_TOP} busiest days",
-        header="date",
-        values="count"
+        header=by_day.data[["date"]],
+        values=by_day.data[["count"]]
     )
 
     # Count by hour: Bar Chart
     by_hour = TitoFig(f"""
         SELECT
-        hour(time_in) AS hour,
-        strftime(time_in, '%I %p') AS time,
-        COUNT(*) AS count
+            hour(time_in) AS hour,
+            strftime(time_in, '%I %p') AS time,
+            COUNT(*) AS count
         FROM _visit_data
         GROUP BY hour, time
         ORDER BY hour
@@ -116,9 +119,9 @@ def build_poster(
     # Count by day-of-week: Bar Chart
     by_dow = TitoFig(f"""
         SELECT
-        dayofweek(visit_date) AS dow,
-        dayname(visit_date) as day,
-        COUNT(*) AS count
+            dayofweek(visit_date) AS dow,
+            dayname(visit_date) as day,
+            COUNT(*) AS count
         FROM _visit_data
         WHERE day NOT IN ('Saturday', 'Sunday')
         GROUP BY dow, day
@@ -136,14 +139,14 @@ def build_poster(
     # High Flyers: > N visits
     high_flyers = TitoFig(f"""
         SELECT
-        full_name,
-        initials,
-        grade_level,
-        COUNT(*) AS count
+            full_name,
+            initials,
+            grade_level,
+            COUNT(*) AS count
         FROM _visit_data
         GROUP BY full_name, initials, grade_level
         HAVING count >= {FREQ_VISIT_COUNT}
-        ORDER BY count DESC
+        ORDER BY count DESC, initials
     """)
 
     high_flyers.table(
@@ -157,12 +160,12 @@ def build_poster(
 
     esc_staff = TitoFig(f"""
         SELECT
-        staff_name,
-        COUNT(*) AS count
+            staff_name,
+            COUNT(*) AS count
         FROM _visit_data
         GROUP BY staff_name
         HAVING count >= {staff_escort_count}
-        ORDER BY count DESC
+        ORDER BY count DESC, staff_name
     """)
 
     esc_staff.table(
@@ -174,15 +177,15 @@ def build_poster(
     # Count by grade level: Pie Chart
     by_grade = TitoFig(f"""
         SELECT
-        grade_level,
-        COUNT(*) AS count
+            grade_level,
+            COUNT(*) AS count
         FROM _visit_data
         WHERE grade_level IS NOT NULL
         GROUP BY grade_level
         ORDER BY CASE grade_level::text
-        WHEN 'PK' THEN '-2'
-        WHEN 'K' THEN '-1'
-        ELSE grade_level
+            WHEN 'PK' THEN '-2'
+            WHEN 'K' THEN '-1'
+            ELSE grade_level
         END
 
     """)
@@ -205,8 +208,8 @@ def build_poster(
     # Count by entry zone-of-regulation: Pie Chart
     by_entry_zor = TitoFig(f"""
         SELECT
-        zor_entry,
-        COUNT(*) AS count
+            zor_entry,
+            COUNT(*) AS count
         FROM _visit_data
         WHERE zor_entry IS NOT NULL
         GROUP BY zor_entry
@@ -229,8 +232,8 @@ def build_poster(
     # Count by exit zone-of-regulation: Pie Chart
     by_exit_zor = TitoFig(f"""
         SELECT
-        zor_exit,
-        COUNT(*) AS count
+            zor_exit,
+            COUNT(*) AS count
         FROM _visit_data
         WHERE zor_exit IS NOT NULL
         GROUP BY zor_exit

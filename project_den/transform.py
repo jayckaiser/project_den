@@ -74,6 +74,7 @@ def sql_raw_to_clean(raw_data_name: str) -> str:
 
     timestamp_formats: list[str] = [
         "%Y-%m-%d %H:%M:%S %p",
+        "%Y-%m-%d %H:%M:%S",
         "%Y-%m-%d %H:%M",
     ]
 
