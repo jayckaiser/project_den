@@ -33,7 +33,7 @@ def main():
     POSTER = poster.build_poster(visit_data, poster_title=POSTER_TITLE)
     # POSTER.write_image(os.path.join(IMAGES_DIR, 'overview.pdf'))  # TODO: Broken; use html download 
     POSTER.write_html(os.path.join(IMAGES_DIR, 'overview.html'))
-    logging.info(f"PDF and HTML of poster are saved: {IMAGES_DIR}")
+    logging.info(f"HTML of poster is saved: {IMAGES_DIR}")
 
     return
 

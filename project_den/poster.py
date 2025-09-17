@@ -259,20 +259,20 @@ def build_poster(
         row_heights=[0.1, 0.1, 0.2, 0.2, 0.2, 0.2],
         column_widths=[0.3, 0.3, 0.4],
         subplot_titles=(
-        None,  # Total counts
-        by_dow.title,
-        by_day.title,
-        high_flyers.title, esc_staff.title,
-        by_hour.title, by_grade.title,
-        None, None  # ZOR pie charts
+            None,  # Total counts
+            by_dow.title,
+            by_day.title,
+            high_flyers.title, esc_staff.title,
+            by_hour.title, by_grade.title,
+            None, None  # ZOR pie charts
         ),
         specs=[
-        [{"type": "table", "colspan": 2}, None, {"type": "bar", "rowspan": 2}],
-        [{"type": "table", "colspan": 2}, None, None],
-        [{"type": "table", "rowspan": 4}, {"type": "table", "rowspan": 4}, {"type": "bar"}],
-        [None, None, {"type": "bar"}],
-        [None, None, {"type": "pie"}],
-        [None, None, {"type": "pie"}],
+            [{"type": "table", "colspan": 2}, None, {"type": "bar", "rowspan": 2}],
+            [{"type": "table", "colspan": 2}, None, None],
+            [{"type": "table", "rowspan": 4}, {"type": "table", "rowspan": 4}, {"type": "bar"}],
+            [None, None, {"type": "bar"}],
+            [None, None, {"type": "pie"}],
+            [None, None, {"type": "pie"}],
         ],
         vertical_spacing=0.05
     )
