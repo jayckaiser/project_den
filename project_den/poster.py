@@ -174,7 +174,7 @@ def build_poster(
         values=esc_staff.data.T
     )
 
-    # Count by grade level: Pie Chart
+    # Count by grade level: Bar Chart
     by_grade = TitoFig(f"""
         SELECT
             grade_level,
@@ -194,6 +194,30 @@ def build_poster(
         title="Visits by Grade Level",
         labels="count",
         x=list(map(GRADE_LABELS.get, by_grade.data['grade_level'])),
+        y="count",
+        colors=COLOR_PALETTE,
+    )
+
+    # TODO: by_grade.bar() would overwrite other bar.
+    by_grade_distinct = TitoFig(f"""
+        SELECT
+            grade_level,
+            COUNT(DISTINCT (full_name, initials)) as count
+        FROM _visit_data
+        WHERE grade_level IS NOT NULL
+        GROUP BY grade_level
+        ORDER BY CASE grade_level::text
+            WHEN 'PK' THEN '-2'
+            WHEN 'K' THEN '-1'
+            ELSE grade_level
+        END
+
+    """)
+
+    by_grade_distinct.bar(
+        title="Distinct Visits by Grade Level",
+        labels="count",
+        x=list(map(GRADE_LABELS.get, by_grade_distinct.data['grade_level'])),
         y="count",
         colors=COLOR_PALETTE,
     )
@@ -292,6 +316,7 @@ def build_poster(
     poster.add_trace(high_flyers.figdata, row=3, col=1)
     poster.add_trace(esc_staff.figdata, row=3, col=2)
     poster.add_trace(by_grade.figdata, row=4, col=3)
+    poster.add_trace(by_grade_distinct.figdata, row=4, col=3)  # Place grade_level_distinct atop grade_level
     poster.add_trace(by_entry_zor.figdata, row=5, col=3)
     poster.add_trace(by_exit_zor.figdata, row=6, col=3)
 
