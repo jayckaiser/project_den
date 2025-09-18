@@ -277,24 +277,73 @@ def build_poster(
         WHERE zor_exit IS NULL
     """)
 
+    ### Cut Score
+    year_month = "strftime(visit_date, '%Y-%m')"
+
+    last_three_months = sql(f"""
+
+        select distinct
+            {year_month} as year_month
+        from _visit_data
+        order by 1 desc
+        limit 3
+
+    """)['year_month'].to_list()  # Pull column out from Pandas dataframe.
+
+    last_month = last_three_months[0]
+    prev_month = last_three_months[1] if len(last_three_months) > 1 else last_month
+    first_month = last_three_months[2] if len(last_three_months) > 2 else last_three_months[-1]
+
+    cut_scores = TitoFig(f"""
+
+        select
+            school_year,
+            program_id,
+            grade_level,
+            ceil(avg(visit_length_sec) // 60) as avg_visit_min,
+
+            count_if({year_month} = '{last_month}') as "{last_month}",
+            count_if({year_month} = '{prev_month}') as "{prev_month}",
+            count_if({year_month} = '{first_month}') as "{first_month}",
+
+        from _visit_data
+
+        --where {year_month} = '{last_month}'
+
+        group by all
+        having least("{first_month}", "{prev_month}", "{last_month}") >= 5
+        order by 1, 2
+
+    """)
+
+    cut_scores.table(
+        title=f"MTSS Flag)",
+        header=['program_id', 'avg_visit_min', last_month, prev_month, first_month],
+        values=cut_scores.data[['program_id', 'avg_visit_min', last_month, prev_month, first_month]].T
+    )
+
+
+
     ### Design the poster
     poster = make_subplots(
-        rows=6, cols=3,
-        row_heights=[0.1, 0.1, 0.2, 0.2, 0.2, 0.2],
+        rows=8, cols=3,
+        row_heights=[0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2],
         column_widths=[0.3, 0.3, 0.4],
         subplot_titles=(
-            None,  # Total counts
-            by_dow.title,
+            None, by_dow.title, # Total counts
             by_day.title,
-            high_flyers.title, esc_staff.title,
-            by_hour.title, by_grade.title,
-            None, None  # ZOR pie charts
+            cut_scores.title, by_hour.title,
+            high_flyers.title, esc_staff.title, by_grade.title,
+            None,  # ZOR pie charts
+            None
         ),
         specs=[
             [{"type": "table", "colspan": 2}, None, {"type": "bar", "rowspan": 2}],
             [{"type": "table", "colspan": 2}, None, None],
-            [{"type": "table", "rowspan": 4}, {"type": "table", "rowspan": 4}, {"type": "bar"}],
-            [None, None, {"type": "bar"}],
+            [{"type": "table", "rowspan": 2, "colspan": 2}, None, {"type": "bar", "rowspan": 2}],
+            [None, None, None],
+            [{"type": "table", "rowspan": 4}, {"type": "table", "rowspan": 4}, {"type": "bar", "rowspan": 2}],
+            [None, None, None],
             [None, None, {"type": "pie"}],
             [None, None, {"type": "pie"}],
         ],
@@ -311,14 +360,16 @@ def build_poster(
     # # Add the graphs to the subplots
     poster.add_trace(totals.figdata, row=1, col=1)
     poster.add_trace(by_day.figdata, row=2, col=1)
+    poster.add_trace(cut_scores.figdata, row=3, col=1)
+    poster.add_trace(high_flyers.figdata, row=5, col=1)
+    poster.add_trace(esc_staff.figdata, row=5, col=2)
+
     poster.add_trace(by_dow.figdata, row=1, col=3)
     poster.add_trace(by_hour.figdata, row=3, col=3)
-    poster.add_trace(high_flyers.figdata, row=3, col=1)
-    poster.add_trace(esc_staff.figdata, row=3, col=2)
-    poster.add_trace(by_grade.figdata, row=4, col=3)
-    poster.add_trace(by_grade_distinct.figdata, row=4, col=3)  # Place grade_level_distinct atop grade_level
-    poster.add_trace(by_entry_zor.figdata, row=5, col=3)
-    poster.add_trace(by_exit_zor.figdata, row=6, col=3)
+    poster.add_trace(by_grade.figdata, row=5, col=3)
+    poster.add_trace(by_grade_distinct.figdata, row=5, col=3)  # Place grade_level_distinct atop grade_level
+    poster.add_trace(by_entry_zor.figdata, row=7, col=3)
+    poster.add_trace(by_exit_zor.figdata, row=8, col=3)
 
     # # Display total null rows in relevant graphs.
     # poster.add_annotation(
