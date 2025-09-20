@@ -152,8 +152,6 @@ datasets:
     select * from visit_data
 
 
-
-
 layout: |
 
   AAF
@@ -207,14 +205,53 @@ plots:
       order by 2 desc
       limit {{ SHOW_TOP }}
 
-  # C:
-  #   name: MTSS Cut Score
-  #   title: MTSS Flag
-  #   type: table
-  #   header: "*"  # Pass all data
-  #   values: $*   # Pass all data
-  #   sql: |
-  #     select * from poster_data  -- TODO!
+  # Find all student whos, over the last three months,
+  # have attended the den at least {{ FREQ_VISIT_COUNT }} times.
+  C:
+    name: MTSS Cut Score
+    type: table
+    figures:
+      - title: MTSS Flag
+        header:
+          - student
+          - grade
+          - month_1_count
+          - month_2_count
+          - month_3_count
+        values:
+          - program_id
+          - grade_level
+          - month_1_count
+          - month_2_count
+          - month_3_count
+    sql: |
+      with latest_months as (
+        select distinct strftime(visit_date, '%Y-%m') as year_month
+        from poster_data
+        order by year_month DESC
+        limit 3
+      ),
+      joined as (
+        select
+          program_id,
+          grade_level,
+          year_month
+        from poster_data
+          join latest_months
+          on strftime(visit_date, '%Y-%m') = year_month
+      )
+      select
+        program_id,
+        grade_level,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 0) then 1 else 0 end) as month_1_count,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 1) then 1 else 0 end) as month_2_count,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 2) then 1 else 0 end) as month_3_count
+      from joined
+      group by all
+      having month_1_count >= {{ FREQ_VISIT_COUNT }}
+         and month_2_count >= {{ FREQ_VISIT_COUNT }}
+         and month_3_count >= {{ FREQ_VISIT_COUNT }}
+      order by 5 desc, 4 desc, 3 desc
 
   D:
     name: High Flyers (> N visits)
@@ -392,4 +429,3 @@ plots:
       where zor_exit is not null
       group by all
       order by 1
-
