@@ -1,5 +1,7 @@
 import duckdb
+import jinja2
 import sqlparse
+import yaml
 
 from typing import List, Optional, Union
 from typing import TYPE_CHECKING
@@ -55,3 +57,16 @@ def time_filter(years: List[int], months: List[int]) -> str:
 
     filter_clause = " AND ".join(time_clauses)
     return filter_clause
+
+def load_yaml(path: str, **kwargs) -> dict:
+    # Load the YAML as a string to optionally apply templating.
+    with open(path, 'r') as fp:
+        configs = fp.read() 
+
+    # Inject kwarg Jinja variables if specified.
+    if kwargs:
+        env = jinja2.Environment()
+        template = env.from_string(configs)
+        configs = template.render(kwargs)
+
+    return yaml.safe_load(configs)

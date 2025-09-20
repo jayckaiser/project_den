@@ -1,0 +1,347 @@
+variables:
+  PATH_TO_DATA: "./data/FINAL_SampleData.csv"
+
+  FREQ_VISIT_COUNT: 5
+  STAFF_ESCORT_COUNT: 5
+  SHOW_TOP: 5
+  LONG_VISIT_LENGTH_MIN: 20
+  
+  COLOR_PALETTE: &COLOR_PALETTE fall
+
+
+
+datasets:
+
+  raw_visit_data: |
+    select * from read_csv(
+      '{{ PATH_TO_DATA }}',
+      union_by_name=True,
+      nullstr='N/A',
+      filename=True,
+      auto_detect=True
+    )
+
+  visit_data: |
+    select
+        -- Datetime columns
+        try_strptime("Date of Visit"::text, ['%Y-%m-%d', '%Y-%m-%d %H:%M:%S'])::date as visit_date,
+
+        CASE WHEN MONTH(visit_date) >= 9
+            THEN YEAR(visit_date) + 1
+            ELSE YEAR(visit_date)
+        END::text AS school_year,
+
+        try_strptime(concat("visit_date", ' ', "Time in"), ['%Y-%m-%d %H:%M:%S %p', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']) as raw_time_in,
+        try_strptime(concat("visit_date", ' ', "Time out"), ['%Y-%m-%d %H:%M:%S %p', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']) as raw_time_out,
+
+        -- This section fixes input-mistake where AM and PM is chosen incorrectly.
+        CASE
+            WHEN HOUR("raw_time_in") < 7
+                THEN "raw_time_in" + INTERVAL 12 HOURS
+            WHEN HOUR("raw_time_in") > 16
+                THEN "raw_time_in" - INTERVAL 12 HOURS
+            ELSE "raw_time_in"
+        END AS time_in,
+            
+        CASE
+            WHEN HOUR("raw_time_out") < 7
+                THEN "raw_time_out" + INTERVAL 12 HOURS
+            WHEN HOUR("raw_time_out") > 16
+                THEN "raw_time_out" - INTERVAL 12 HOURS
+            ELSE "raw_time_out"
+        END AS time_out,
+
+        -- Demographics columns
+        "First Name" as first_name_original,
+        "Last Name" as last_name_original,
+
+        lower(regexp_replace( "First Name" , '[^a-zA-Z]', '', 'g')) as first_name,
+        lower(regexp_replace(replace("Last Name", '-', ' '), '[^a-zA-Z]', '', 'g')) as last_name,
+        concat(first_name, ' ', last_name) as full_name,
+        "Grade Level"::text as grade_level,
+
+        -- Setting "unique" IDs
+        array_to_string(flatten([
+
+            -- First Name: Joe -> [J]
+            [substring(upper("first_name"), 1, 1)],  --Cut N Uppercase initials into a list
+
+            -- Last Name: Martinez-Hernandex -> [M, H]
+            list_transform(
+                regexp_split_to_array(upper("last_name"), '[- ]'),  --Split Uppercase by either hyphen or space
+                x -> substring(x, 1, 1)  --Take the first N initials of each name
+            )
+        ]), '') as initials,          -- Joe Martinez-Hernandez -> JMH
+        
+
+        array_to_string(flatten([
+
+            -- First Name: Joe -> [J]
+            [substring(upper("first_name"), 1, 2)],  --Cut N Uppercase initials into a list
+
+            -- Last Name: Martinez-Hernandex -> [M, H]
+            list_transform(
+                regexp_split_to_array(upper("last_name"), '[- ]'),  --Split Uppercase by either hyphen or space
+                x -> substring(x, 1, 2)  --Take the first N initials of each name
+            )
+        ]), '') as program_id_xyear,  -- Joe Martinez-Hernandez -> JOMAHE
+
+        concat(program_id_xyear, grade_level) as program_id,        -- JOMAHE -> JOMAHE4
+
+        -- Metadata columns
+        date_diff('second', time_in, time_out) as visit_length_sec,
+
+        case
+            when "*Zones of Regulation Check* Entry" = '' then null
+            else lower("*Zones of Regulation Check* Entry")
+        end as zor_entry,
+    
+        case
+            when "*Zones of Regulation Check* Exit" = '' then null
+            else lower("*Zones of Regulation Check* Exit")
+        end as zor_exit,
+
+        "Escorting Staff" as staff_name,
+
+        -- External metadata (optional)
+        -- strptime("Timestamp", '%m/%d/%Y %H:%M:%S') as _updated_at,  -- Different format
+        filename as _filepath,
+
+    from raw_visit_data
+
+  # TODO: Inject filters on time and grade level
+  poster_data: |
+    select * from visit_data
+
+
+
+
+layout: |
+
+  AAF
+  BBF
+  CCG
+  CCG
+  DEH
+  DEH
+  DEI
+  DEJ
+
+
+plots:
+
+  # A:
+  #   name: Total Visit Count
+  #   title: ~  # No title
+  #   type: table
+  #   header:
+  #     - Total Count
+  #     - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
+  #     - Average Visit Length (min.)
+  #   values:
+  #     - count
+  #     - long_visits
+  #     - avg_visit_min
+  #   sql: |
+  #     select
+  #       count(*) as count,
+  #       count(*) filter (where visit_length_sec >= {{ LONG_VISIT_LENGTH_MIN }} * 60) as long_visits,
+  #       round(avg(visit_length_sec) / 60, 1) as avg_visit_min,
+      
+  #     from poster_data
+
+  # B:
+  #   name: Top N Busiest Days
+  #   title: Top {{ SHOW_TOP }} busiest days
+  #   type: table
+  #   header: date
+  #   values: count
+  #   sql: |
+  #     select
+  #       strftime(visit_date, '%m/%d/%Y') as date,
+  #       count(*) as count
+      
+  #     from poster_data
+  #     group by all
+  #     order by 2 desc
+  #     limit {{ SHOW_TOP }}
+
+  # C:
+  #   name: MTSS Cut Score
+  #   title: MTSS Flag
+  #   type: table
+  #   header: "*"  # Pass all data
+  #   values: $*   # Pass all data
+  #   sql: |
+  #     select * from poster_data  -- TODO!
+
+  # D:
+  #   name: High Flyers (> N visits)
+  #   title: High flyers (n > {{ FREQ_VISIT_COUNT }})
+  #   type: table
+  #   header:
+  #     - student
+  #     - grade
+  #     - visits
+  #   values:
+  #     - initials
+  #     - grade_level
+  #     - count
+  #   sql: |
+  #     select
+  #       full_name,
+  #       initials,
+  #       grade_level,
+  #       count(*) as count
+      
+  #     from poster_data
+  #     group by all
+  #     having count >= {{ FREQ_VISIT_COUNT }}
+  #     order by 4 desc, 2
+  
+  # E:
+  #   name: Escorting Staff (> N visits)
+  #   title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
+  #   type: table
+  #   header:
+  #     - escort
+  #     - visits
+  #   values:
+  #     - staff_name
+  #     - count
+  #   sql: |
+  #     select
+  #       staff_name,
+  #       count(*) as count
+      
+  #     from poster_data
+  #     group by all
+  #     having count >= {{ STAFF_ESCORT_COUNT }}
+  #     order by 2 desc, 1
+
+  # F:
+  #   name: Count by Hour
+  #   title: Visits by Hour
+  #   type: bar
+  #   labels: count
+  #   x: time
+  #   y: count
+  #   color: time
+  #   sql: |
+  #     select
+  #       hour(time_in) as hour,
+  #       strftime(time_in, '%I %p') as time,
+  #       count(*) as count
+          
+  #     from poster_data
+  #     group by all
+  #     order by 1
+
+  # G:
+  #   name: Count by Day-of-Week
+  #   title: Visits by Weekday
+  #   type: bar
+  #   labels: count
+  #   x: day
+  #   y: count
+  #   color: day
+  #   sql: |
+  #     select
+  #       dayofweek(visit_date) as dow,
+  #       dayname(visit_date) as day,
+  #       count(*) as count
+      
+  #     from poster_data
+  #     where day not in ('Saturday', 'Sunday')
+  #     group by all
+  #     order by 1
+
+  # H:
+  #   name: (Distinct) Count by Grade Level
+  #   title: Visits by Grade Level
+  #   type: bar
+  #   labels:
+  #     - count
+  #     - num_students
+  #   x:
+  #     - grade_label
+  #     - grade_label
+  #   y:
+  #     - count
+  #     - num_students
+  #   color:
+  #     - grade_label
+  #     - grade_label
+  #   sql: |
+  #     select
+  #       grade_level,
+
+  #       case grade_level
+  #         when 'null' then 'n/a'
+  #         when '1' then '1st'
+  #         when '2' then '2nd'
+  #         when '3' then '3rd'
+  #         when '4' then '4th'
+  #         when '5' then '5th'
+  #         when '6' then '6th'
+  #         else grade_level
+  #       end as grade_label,
+
+  #       case grade_level
+  #         when 'PK' then -2
+  #         when 'K' then -1
+  #         else grade_level::integer
+  #       end as grade_level_order,
+        
+  #       count(*) as count,
+  #       count(distinct(full_name, initials)) as num_students
+      
+  #     from poster_data
+  #     group by all
+  #     order by 1
+
+  # I:
+  #   name: Count by Entry Zone-of-Regulation
+  #   title: Zones of Reg. at Entry
+  #   type: pie
+  #   labels: zor_entry
+  #   values: count
+  #   color: zor_entry
+  #   color_mapping:
+  #     red: darkred
+  #     green: forestgreen
+  #     blue: royalblue
+  #     yellow: palegoldenrod
+  #     ~: black
+  #   sql: |
+  #     select
+  #       zor_entry,
+  #       count(*) as count
+      
+  #     from poster_data
+  #     where zor_entry is not null
+  #     group by all
+  #     order by 1
+
+  # J:
+  #   name: Count by Exit Zone-of-Regulation
+  #   title: Zones of Reg. at Exit
+  #   type: pie
+  #   labels: zor_exit
+  #   values: count
+  #   color: zor_exit
+  #   color_mapping:
+  #     red: darkred
+  #     green: forestgreen
+  #     blue: royalblue
+  #     yellow: palegoldenrod
+  #   sql: |
+  #     select
+  #       zor_exit, 
+  #       count(*) as count
+      
+  #     from poster_data
+  #     where zor_exit is not null
+  #     group by all
+  #     order by 1
+

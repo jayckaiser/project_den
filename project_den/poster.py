@@ -317,7 +317,7 @@ def build_poster(
     """)
 
     cut_scores.table(
-        title=f"MTSS Flag)",
+        title=f"MTSS Flag",
         header=['program_id', 'avg_visit_min', last_month, prev_month, first_month],
         values=cut_scores.data[['program_id', 'avg_visit_min', last_month, prev_month, first_month]].T
     )
