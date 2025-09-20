@@ -19,6 +19,10 @@ plot_helpers:
     - rgb(222, 138, 90)
     - rgb(202, 86, 44)
 
+  TABLE_TRACES: &TABLE_TRACES
+    cells_font:
+      size: 12
+
   BAR_PLOT_LAYOUT: &BAR_PLOT_LAYOUT
     yaxis: {tickformat: d}
     showlegend: False
@@ -164,41 +168,44 @@ layout: |
 
 plots:
 
-  # A:
-  #   name: Total Visit Count
-  #   title: ~  # No title
-  #   type: table
-  #   header:
-  #     - Total Count
-  #     - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
-  #     - Average Visit Length (min.)
-  #   values:
-  #     - count
-  #     - long_visits
-  #     - avg_visit_min
-  #   sql: |
-  #     select
-  #       count(*) as count,
-  #       count(*) filter (where visit_length_sec >= {{ LONG_VISIT_LENGTH_MIN }} * 60) as long_visits,
-  #       round(avg(visit_length_sec) / 60, 1) as avg_visit_min,
-      
-  #     from poster_data
+  A:
+    name: Total Visit Count
+    type: table
+    figures:
+      - title: ~  # No title
+        header:
+          - Total Count
+          - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
+          - Average Visit Length (min.)
+        values:
+          - count
+          - long_visits
+          - avg_visit_min
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        count(*) as count,
+        count(*) filter (where visit_length_sec >= {{ LONG_VISIT_LENGTH_MIN }} * 60) as long_visits,
+        round(avg(visit_length_sec) / 60, 1) as avg_visit_min,
+      from poster_data
 
-  # B:
-  #   name: Top N Busiest Days
-  #   title: Top {{ SHOW_TOP }} busiest days
-  #   type: table
-  #   header: date
-  #   values: count
-  #   sql: |
-  #     select
-  #       strftime(visit_date, '%m/%d/%Y') as date,
-  #       count(*) as count
-      
-  #     from poster_data
-  #     group by all
-  #     order by 2 desc
-  #     limit {{ SHOW_TOP }}
+  B:
+    name: Top N Busiest Days
+    type: table
+    title: Top {{ SHOW_TOP }} busiest days
+    figures:
+      - header: date
+        values: count
+        pivot: True
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        strftime(visit_date, '%m/%d/%Y') as date,
+        count(*) as count
+      from poster_data
+      group by all
+      order by 2 desc
+      limit {{ SHOW_TOP }}
 
   # C:
   #   name: MTSS Cut Score
@@ -209,49 +216,51 @@ plots:
   #   sql: |
   #     select * from poster_data  -- TODO!
 
-  # D:
-  #   name: High Flyers (> N visits)
-  #   title: High flyers (n > {{ FREQ_VISIT_COUNT }})
-  #   type: table
-  #   header:
-  #     - student
-  #     - grade
-  #     - visits
-  #   values:
-  #     - initials
-  #     - grade_level
-  #     - count
-  #   sql: |
-  #     select
-  #       full_name,
-  #       initials,
-  #       grade_level,
-  #       count(*) as count
-      
-  #     from poster_data
-  #     group by all
-  #     having count >= {{ FREQ_VISIT_COUNT }}
-  #     order by 4 desc, 2
+  D:
+    name: High Flyers (> N visits)
+    type: table
+    figures:
+      - title: High flyers (n > {{ FREQ_VISIT_COUNT }})
+        header:
+          - student
+          - grade
+          - visits
+        values:
+          - initials
+          - grade_level
+          - count
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        full_name,
+        initials,
+        grade_level,
+        count(*) as count
+      from poster_data
+      group by all
+      having count >= {{ FREQ_VISIT_COUNT }}
+      order by 4 desc, 2
   
-  # E:
-  #   name: Escorting Staff (> N visits)
-  #   title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
-  #   type: table
-  #   header:
-  #     - escort
-  #     - visits
-  #   values:
-  #     - staff_name
-  #     - count
-  #   sql: |
-  #     select
-  #       staff_name,
-  #       count(*) as count
-      
-  #     from poster_data
-  #     group by all
-  #     having count >= {{ STAFF_ESCORT_COUNT }}
-  #     order by 2 desc, 1
+  E:
+    name: Escorting Staff (> N visits)
+    type: table
+    figures:
+      - title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
+        header:
+          - escort
+          - visits
+        values:
+          - staff_name
+          - count
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        staff_name,
+        count(*) as count
+      from poster_data
+      group by all
+      having count >= {{ STAFF_ESCORT_COUNT }}
+      order by 2 desc, 1
 
   F:
     name: Count by Hour
@@ -372,6 +381,7 @@ plots:
         values: count
         color: zor_exit
         color_discrete_map: *ZOR_COLOR_MAPPING
+        hole: 0.5
     layout: *PIE_CHART_LAYOUT
     traces: *PIE_CHART_TRACES
     sql: |

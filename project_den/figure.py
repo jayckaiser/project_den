@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 from project_den import util
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class Figure:
@@ -43,8 +43,8 @@ class Figure:
     def show(self):
         self.figure.show()
 
-    @staticmethod
-    def figure_callable(*args, **kwargs):
+    @classmethod
+    def figure_callable(cls,*args, **kwargs) -> 'go.Figure':
         """
         Defined in child classes. 
 
@@ -58,8 +58,8 @@ class BarFigure(Figure):
     """
     https://plotly.com/python-api-reference/generated/plotly.express.bar
     """
-    @staticmethod
-    def figure_callable(*args, **kwargs):
+    @classmethod
+    def figure_callable(cls,*args, **kwargs) -> 'go.Figure':
         return px.bar(*args, **kwargs)
 
 
@@ -67,31 +67,60 @@ class PieFigure(Figure):
     """
     https://plotly.com/python-api-reference/generated/plotly.express.pie
     """
-    @staticmethod
-    def figure_callable(*args, **kwargs):
+    @classmethod
+    def figure_callable(cls,*args, **kwargs) -> 'go.Figure':
         return px.pie(*args, **kwargs)
 
 
-# TODO: Finish table
 class TableFigure(Figure):
+    """
+    There is no px.table(), so we need to define our own.
+    Override default argument names with those that align with px.
+    """
+    @classmethod
+    def figure_callable(cls,
+        data_frame: 'DataFrame',
+        title: Optional[str] = None,
+        header: Union[str, List[str]] = None,
+        values: Union[str, List[object]] = None,
+        pivot: bool = False,
+        **kwargs
+    ) -> 'go.Figure':
+        """
+        https://plotly.github.io/plotly.py-docs/generated/plotly.graph_objects.Table.html
+        """
+        # Check whether passed data is column names or raw values.
+        header = cls.try_dataframe_extract(data_frame, header)
+        values = cls.try_dataframe_extract(data_frame, values)
 
-    CELL_FONT_SIZE = 12  # How big are the cells in the tables?
+        # By default, the cell data is transposed.
+        # If specified, "pivot" the data (i.e., send as is).
+        if not pivot:
+            values = values.T
 
-    def __init__(self, *args, header, values, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        data = px.Table(
-            self.data,
-            title=self.title,
-            header=self.parse_optional_cols(header),
-            cells=self.parse_optional_cols(values),
+        table_fig = go.Table(
+            name=title,
+            header={'values': header},
+            cells={'values': values},
+            **kwargs
         )
+        return go.Figure(table_fig)
+    
+    @staticmethod
+    def try_dataframe_extract(data_frame: 'DataFrame', columns: Union[str, List[object]]):
+        """
+        We cannot ensure the user is passing static strings or column names.
+        This method tries extracting the data from the dataframe.
+        If this fails, return the values as is.
+        """
+        if isinstance(columns, str):
+            columns = [columns]
 
-        self.figure = go.Figure(data=data)
+        try:
+            return data_frame[columns]
+        except:
+            return columns
 
-        self.figure.update_traces(
-            cells_font={'size': self.CELL_FONT_SIZE},
-        )
 
 # TODO: Refactor so that all values (except data) are definable via YAML.
 # TODO: Swap to go.Bar, go.Pie, go.Table  (Gonna be a PITA to add these complete figures to the final picture)
