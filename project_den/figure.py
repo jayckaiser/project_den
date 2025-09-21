@@ -42,6 +42,10 @@ class Figure:
         if traces:
             self.figure.update_traces(**traces)
 
+    @property
+    def data(self):
+        return self.figure.data
+
     def show(self):
         self.figure.show()
 

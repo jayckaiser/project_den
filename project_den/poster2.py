@@ -133,8 +133,8 @@ def build_poster(
         **subplot_kwargs
     )
 
-    for idx, plot in idx_to_figure_map.items():
-        for trace in plot.figure.data:
+    for idx, figure in idx_to_figure_map.items():
+        for trace in figure.data:
             row = subplot_trace_map[idx][0]
             col = subplot_trace_map[idx][1]
             poster.add_trace(trace, row=row, col=col)
