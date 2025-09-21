@@ -446,6 +446,6 @@ poster:
     title_text: "{{ POSTER_TITLE }}"
     title_font_size: 24
     autosize: False
-    height: 1150
     width: 1275
+    height: 1650
     showlegend: False
