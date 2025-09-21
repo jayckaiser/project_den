@@ -73,8 +73,7 @@ def build_poster(
     num_rows, num_cols = design.shape
 
     # Warn if unknown figures are referenced
-    distinct_indexes = np.unique(design)  # Also used for title order
-    for idx in distinct_indexes:
+    for idx in np.unique(design):
         if idx not in figure_map:
             logging.error(f"Figure index {idx} defined in design but missing in figure mapping!")
             exit(1)
@@ -82,15 +81,16 @@ def build_poster(
     # Generate the spans (no figure information required)
     rowspan_map, colspan_map = get_spans_from_design(design)
 
-    # Generate the specs and traces
-    plot_specs_array = []  # Shape the array at the end
-    plot_trace_map = {}
+    # Generate the specs, traces, and titles in order of appearance
+    subplot_specs_array = []  # Shape the array at the end
+    subplot_trace_map = {}
+    subplot_titles = []
     already_processed = set()
 
     for array_idx, fig_idx in enumerate(design.flat):
         
         if fig_idx in already_processed:
-            plot_specs_array.append(None)
+            subplot_specs_array.append(None)
             continue
         
         # Update specs
@@ -100,37 +100,33 @@ def build_poster(
             'colspan': colspan_map[fig_idx]
         }
 
-        plot_specs_array.append(spec)
+        subplot_specs_array.append(spec)
         already_processed.add(fig_idx)
 
         # Update traces (i.e., where spacs are being saved in array)
-        plot_trace_map[str(fig_idx)] = (
+        subplot_trace_map[str(fig_idx)] = (
             array_idx // num_cols + 1,  # row
             array_idx % num_cols + 1    # col
         )
 
-    # Reshape the specs into a 2D array
-    plot_specs = np.reshape(plot_specs_array, shape=design.shape).tolist()
+        # Update titles
+        subplot_titles.append(figure_map[fig_idx].title)
 
-    # Collect the figure titles in order of appearance in design
-    # (Assume titles are defined in first data trace of each figure)
-    subplot_titles = [
-        figure_map[idx].title
-        for idx in distinct_indexes
-    ]
+    # Reshape the specs into a 2D array
+    subplot_specs = np.reshape(subplot_specs_array, shape=design.shape).tolist()
 
     ### Build the poster using the generated artifacts 
     poster = make_subplots(
         rows=num_rows, cols=num_cols,
         subplot_titles=subplot_titles,
-        specs=plot_specs,
+        specs=subplot_specs,
         **subplot_kwargs
     )
 
     for idx, plot in figure_map.items():
         for trace in plot.figure.data:
-            row = plot_trace_map[idx][0]
-            col = plot_trace_map[idx][1]
+            row = subplot_trace_map[idx][0]
+            col = subplot_trace_map[idx][1]
             poster.add_trace(trace, row=row, col=col)
 
     # Optional formatting
