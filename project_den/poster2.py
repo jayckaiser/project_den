@@ -43,7 +43,8 @@ def build_poster(
     figure_map: Dict[str, str],  # Map design idx to figure name
     layout: Optional[dict] = None,
     subplot_kwargs: Optional[dict] = None,
-    show: bool = False
+    show: bool = False,
+    write_path: Optional[str] = None,
 ):
     """
     Convert text representation of design into complete poster.
@@ -147,5 +148,9 @@ def build_poster(
      # Show the poster immediately if specified
     if show:
         poster.show()
+
+    # Write the poster to disc if specified
+    if write_path:
+        poster.write_html(write_path)
 
     return poster

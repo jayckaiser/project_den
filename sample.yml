@@ -414,6 +414,7 @@ posters:
 
   Monthly Report:
     show: True
+    write_path: "./images/overview_redux.html"
 
     design: |
 
