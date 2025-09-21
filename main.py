@@ -1,42 +1,36 @@
-import os
-import sys
-
-import kaleido  # Required to generate the images.
-
-from project_den import transform
-from project_den import poster
-from project_den.util import sql
-
 import logging
+
+from project_den import figure, poster2, util
+
+
 logging.basicConfig(level=logging.INFO)
 
-PATH_TO_DATA: str = "./data/FINAL_SampleData.csv"
-POSTER_TITLE: str =  "Tito's Den Visit Overview"
-IMAGES_DIR: str = "./images"
+
+PATH_TO_CONFIGS: str = "./sample.yml"
 
 
-def main():
+# Parse YAML configs, using a second pass to inject Jinja variables.
+logging.info(f"Parsing configs defined at {PATH_TO_CONFIGS}")
+jinja_variables = util.load_yaml(PATH_TO_CONFIGS).get("variables", {})
+configs = util.load_yaml(PATH_TO_CONFIGS, **jinja_variables)
 
-    # Load downloaded CSV
-    # Fix errors (e.g., deviant time formats, "9PM", etc.) 
-    sql_raw_visit_data = transform.sql_csv_to_raw(PATH_TO_DATA)
-    logging.debug(f"sql_csv_to_raw('{PATH_TO_DATA}')\n{sql_raw_visit_data}")
-    raw_visit_data = sql(sql_raw_visit_data, "raw_visit_data")
-    logging.info(raw_visit_data.iloc[:5])
+# Register named datasets before building the poster.
+logging.info("Creating datasets...")
+for dataset_name, dataset_sql in configs["datasets"].items():
+    dataset = util.sql(dataset_sql, dataset_name)
+    logging.debug(f"Dataset created: {dataset_name}\n{dataset[:5]}")
 
-    sql_visit_data = transform.sql_raw_to_clean("raw_visit_data")
-    logging.debug(f"sql_raw_to_clean('raw_visit_data')\n{sql_visit_data}")
-    visit_data = sql(sql_visit_data, "visit_data")
-    logging.info(visit_data.iloc[:5])
+# Parse each of the poster plots into figures.
+logging.info("Creating figures...")
+figures = {}
+for fig_name, fig_config in configs['figures'].items():
+    fig = figure.Figure(**fig_config)
+    figures[fig_name] = fig
+    logging.debug(f"Figure created: {fig_name}")
 
-    # Create poster and save to disk.
-    POSTER = poster.build_poster(visit_data, poster_title=POSTER_TITLE)
-    # POSTER.write_image(os.path.join(IMAGES_DIR, 'overview.pdf'))  # TODO: Broken; use html download 
-    POSTER.write_html(os.path.join(IMAGES_DIR, 'overview.html'))
-    logging.info(f"HTML of poster is saved: {IMAGES_DIR}")
+# Combine figures into each poster.
+logging.info("Building poster from figures and layout...")
+for poster_name, poster_kwargs in configs['posters'].items():
+    poster = poster2.build_poster(figures=figures, **poster_kwargs)
+    logging.debug(f"Poster created: {poster_name}")
 
-    return
-
-
-if __name__ == "__main__":
-   sys.exit(main()) 
