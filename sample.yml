@@ -158,7 +158,7 @@ figures:
   Total Visit Count:
     title: ~  # No title
     type: table
-    figures:
+    data:
       - header:
           - Total Count
           - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
@@ -178,7 +178,7 @@ figures:
   Top N Busiest Days:
     title: Top {{ SHOW_TOP }} busiest days
     type: table
-    figures:
+    data:
       - header: date
         values: count
         pivot: True
@@ -197,7 +197,7 @@ figures:
   MTSS Cut Score:
     title: MTSS Flag
     type: table
-    figures:
+    data:
       - header:
           - student
           - grade
@@ -242,7 +242,7 @@ figures:
   High Flyers (> N visits):
     title: High flyers (n > {{ FREQ_VISIT_COUNT }})
     type: table
-    figures:
+    data:
       - header:
           - student
           - grade
@@ -266,7 +266,7 @@ figures:
   Escorting Staff (> N visits):
     title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
     type: table
-    figures:
+    data:
       - header:
           - escort
           - visits
@@ -286,7 +286,7 @@ figures:
   Count by Hour:
     title: Visits by Hour
     type: bar
-    figures:
+    data:
       - x: time
         y: count
         text: count
@@ -306,7 +306,7 @@ figures:
   Count by Day-of-Week:
     title: Visits by Weekday
     type: bar
-    figures:
+    data:
       - x: day
         y: count
         text: count
@@ -327,7 +327,7 @@ figures:
   Count by Grade Level:
     title: Visits by Grade Level
     type: bar
-    figures:
+    data:
       - x: grade_label
         y: count
         text: count
@@ -372,7 +372,7 @@ figures:
   Count by Entry Zone-of-Regulation:
     title: ZOR Entry
     type: pie
-    figures:
+    data:
       - names: zor_entry
         values: count
         color: zor_entry
@@ -392,7 +392,7 @@ figures:
   Count by Exit Zone-of-Regulation:
     title: ZOR Exit
     type: pie
-    figures:
+    data:
       - names: zor_exit
         values: count
         color: zor_exit

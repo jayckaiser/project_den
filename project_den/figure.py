@@ -18,7 +18,7 @@ class Figure:
 
     def __init__(self,
         sql: str, type: str,
-        figures: List[dict],
+        data: List[dict],
         title: Optional[str] = None,
         layout: Optional[dict] = None,
         traces: Optional[dict] = None
@@ -27,12 +27,12 @@ class Figure:
         self.title = title
 
         self.sql = sql
-        self.data = util.sql(sql)
+        self.data_frame = util.sql(sql)
         self.figure = go.Figure()  # Traces added to empty figure
 
         # Figure construction
-        for fig_kwargs in figures:
-            sub_figure = self.figure_callable(self.data, **fig_kwargs)
+        for fig_kwargs in data:
+            sub_figure = self.figure_callable(self.data_frame, **fig_kwargs)
             for trace in sub_figure.data:
                 self.figure.add_trace(trace)
         
@@ -120,8 +120,3 @@ class TableFigure(Figure):
             return data_frame[columns]
         except:
             return columns
-
-
-# TODO: Refactor so that all values (except data) are definable via YAML.
-# TODO: Swap to go.Bar, go.Pie, go.Table  (Gonna be a PITA to add these complete figures to the final picture)
-
