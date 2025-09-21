@@ -342,6 +342,7 @@ figures:
       barmode: overlay  # Default behavior is side-by-side
       <<: *BAR_PLOT_LAYOUT
     traces: *BAR_PLOT_TRACES
+    show: True
     sql: |
       select
         grade_level,
