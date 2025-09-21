@@ -414,40 +414,42 @@ figures:
       order by 1
 
 
-poster:
+posters:
 
-  design: |
+  Monthly Report:
 
-    AAF
-    BBF
-    CCG
-    CCG
-    DEH
-    DEH
-    DEI
-    DEJ
+    design: |
 
-  figure_map:
-    A: Total Visit Count
-    B: Top N Busiest Days
-    C: MTSS Cut Score
-    D: High Flyers (> N visits)
-    E: Escorting Staff (> N visits)
-    F: Count by Hour
-    G: Count by Day-of-Week
-    H: Count by Grade Level
-    I: Count by Entry Zone-of-Regulation
-    J: Count by Exit Zone-of-Regulation
+      AAF
+      BBF
+      CCG
+      CCG
+      DEH
+      DEH
+      DEI
+      DEJ
 
-  subplot_kwargs:
-    row_heights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2]
-    column_widths: [0.3, 0.3, 0.4]
-    vertical_spacing: 0.05
+    figure_map:
+      A: Total Visit Count
+      B: Top N Busiest Days
+      C: MTSS Cut Score
+      D: High Flyers (> N visits)
+      E: Escorting Staff (> N visits)
+      F: Count by Hour
+      G: Count by Day-of-Week
+      H: Count by Grade Level
+      I: Count by Entry Zone-of-Regulation
+      J: Count by Exit Zone-of-Regulation
 
-  layout:
-    title_text: "{{ POSTER_TITLE }}"
-    title_font_size: 24
-    autosize: False
-    width: 1275
-    height: 1650
-    showlegend: False
+    subplot_kwargs:
+      row_heights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2]
+      column_widths: [0.3, 0.3, 0.4]
+      vertical_spacing: 0.05
+
+    layout:
+      title_text: "{{ POSTER_TITLE }}"
+      title_font_size: 24
+      autosize: False
+      width: 1275
+      height: 1650
+      showlegend: False
