@@ -1,6 +1,6 @@
 import logging
 
-from project_den import figure, util
+from project_den import figure, poster2, util
 
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,13 @@ for dataset_name, dataset_sql in configs["datasets"].items():
 
 # Parse each of the poster plots into figures.
 logging.info("Creating plots...")
+figure_map = {}
 for plot_index, plot_config in configs['plots'].items():
     plot = figure.Figure(**plot_config)
+    figure_map[plot_index] = plot
     logging.debug(f"Plot created at index {plot_index}: {plot.name}")
-    plot.show()
+    # plot.show()
+
+logging.info("Building poster from figures and layout...")
+layout_repr = configs["layout"]
+poster = poster2.build_poster_from_layout(layout_repr, figure_map)
