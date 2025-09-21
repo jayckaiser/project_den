@@ -1,3 +1,5 @@
+import logging
+
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -14,10 +16,13 @@ class Figure:
             return object.__new__(PieFigure)
         if type == "table":
             return object.__new__(TableFigure)
+        if type == "text":
+            return object.__new__(TextFigure)
         raise NotImplementedError(f"! Figure type `{type}` is undefined!")
 
     def __init__(self,
-        sql: str, type: str,
+        type: str,
+        sql: str,
         data: List[dict],
         title: Optional[str] = None,
         layout: Optional[dict] = None,
@@ -129,3 +134,37 @@ class TableFigure(Figure):
             return data_frame[columns]
         except:
             return columns
+
+
+# Very different from figures, but best defined here as well
+class TextFigure(Figure):
+
+    data = None  # Data in text figures are defined at the poster-level
+
+    def __init__(self,
+        type: str,
+        text: str,
+        sql: str,
+        show: bool = False,
+        **kwargs  # Ignore most arguments from Figure
+    ):
+        self.type = type
+        self.text = text
+        self.sql = sql
+
+        # If SQL provided, convert to a map for formatting.
+        data_frame = util.sql(sql)
+        format_kwargs = data_frame.to_dict('list')
+
+        # Helper: unpack singletons
+        if len(data_frame) == 1:
+            format_kwargs = {key: val[0] for key, val in format_kwargs.items()}
+        
+        self.text = self.text.format(**format_kwargs)
+
+        # Show the figure immediately if specified
+        if show:
+            self.show()
+
+    def show(self):
+        logging.info(f"Annotation: {self.text}")

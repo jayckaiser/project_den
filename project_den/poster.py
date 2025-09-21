@@ -43,6 +43,7 @@ def build_poster(
     figure_map: Dict[str, str],  # Map design idx to figure name
     layout: Optional[dict] = None,
     subplot_kwargs: Optional[dict] = None,
+    annotations: Optional[dict] = None,  # Annotations are text optionally formatted with SQL
     show: bool = False,
     write_path: Optional[str] = None,
 ):
@@ -88,6 +89,7 @@ def build_poster(
         if not figure:
             logging.error(f"Figure name {figure_name} not defined!")
             exit(1)
+
         idx_to_figure_map[idx] = figure
 
     # Generate the spans (no figure information required)
@@ -144,6 +146,31 @@ def build_poster(
     # Optional formatting
     if layout:
         poster.update_layout(**layout)
+
+    # Optional annotations
+    # {figure, layout} or (text, layout)
+    if annotations:
+        for annotation in annotations:
+
+            # Choice of text figure or raw text
+            if 'figure' in annotation:
+                fig_name = annotation['figure']
+                
+                if fig_name not in figures:
+                    logging.error(f"Annotation figure name {fig_name} not defined!")
+                    exit(1)
+                
+                fig = figures[fig_name]
+                if fig.type != 'text':
+                    logging.error(f"Annotation figure must be type `text`!")
+                    exit(1)
+
+                fig_text = fig.text
+            
+            else:
+                fig_text = annotation['text']
+
+            poster.add_annotation(text=fig_text, **annotation['layout'])
 
      # Show the poster immediately if specified
     if show:

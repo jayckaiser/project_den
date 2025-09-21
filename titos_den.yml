@@ -410,6 +410,23 @@ figures:
       group by all
       order by 1
 
+  # Annotations
+  Entry ZOR Null Count:
+    type: text
+    text: "Total N/A: {count}"
+    sql: |
+      select count(*) as count
+      from poster_data
+      where zor_entry is null
+  
+  Exit ZOR Null Count:
+    type: text
+    text: "Total N/A: {count}"
+    sql: |
+      select count(*) as count
+      from poster_data
+      where zor_exit is null
+
 
 posters:
 
@@ -452,3 +469,20 @@ posters:
       width: 1275
       height: 1650
       showlegend: False
+
+    annotations:
+      - figure: Entry ZOR Null Count
+        layout:
+          xref: paper
+          yref: paper
+          x: 1.0
+          y: 0.17
+          showarrow: False
+
+      - figure: Exit ZOR Null Count
+        layout:
+          xref: paper
+          yref: paper
+          x: 1.0
+          y: 0.0
+          showarrow: False
