@@ -17,13 +17,16 @@ class Figure:
         raise NotImplementedError(f"! Figure type `{type}` is undefined!")
 
     def __init__(self,
-        name: str, sql: str,
+        name: str, sql: str, type: str,
         figures: List[dict],
+        title: Optional[str] = None,
         layout: Optional[dict] = None,
-        traces: Optional[dict] = None,
-        **kwargs  # Stores `type` to avoid collision with built-in
+        traces: Optional[dict] = None
     ):
         self.name = name
+        self.type = type
+        self.title = title
+
         self.sql = sql
         self.data = util.sql(sql)
         self.figure = go.Figure()  # Traces added to empty figure
@@ -80,7 +83,6 @@ class TableFigure(Figure):
     @classmethod
     def figure_callable(cls,
         data_frame: 'DataFrame',
-        title: Optional[str] = None,
         header: Union[str, List[str]] = None,
         values: Union[str, List[object]] = None,
         pivot: bool = False,
@@ -99,7 +101,6 @@ class TableFigure(Figure):
             values = values.T
 
         table_fig = go.Table(
-            name=title,
             header={'values': header},
             cells={'values': values},
             **kwargs

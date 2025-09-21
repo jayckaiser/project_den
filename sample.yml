@@ -168,10 +168,10 @@ plots:
 
   A:
     name: Total Visit Count
+    title: ~  # No title
     type: table
     figures:
-      - title: ~  # No title
-        header:
+      - header:
           - Total Count
           - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
           - Average Visit Length (min.)
@@ -189,8 +189,8 @@ plots:
 
   B:
     name: Top N Busiest Days
-    type: table
     title: Top {{ SHOW_TOP }} busiest days
+    type: table
     figures:
       - header: date
         values: count
@@ -209,10 +209,10 @@ plots:
   # have attended the den at least {{ FREQ_VISIT_COUNT }} times.
   C:
     name: MTSS Cut Score
+    title: MTSS Flag
     type: table
     figures:
-      - title: MTSS Flag
-        header:
+      - header:
           - student
           - grade
           - month_1_count
@@ -255,10 +255,10 @@ plots:
 
   D:
     name: High Flyers (> N visits)
+    title: High flyers (n > {{ FREQ_VISIT_COUNT }})
     type: table
     figures:
-      - title: High flyers (n > {{ FREQ_VISIT_COUNT }})
-        header:
+      - header:
           - student
           - grade
           - visits
@@ -280,10 +280,10 @@ plots:
   
   E:
     name: Escorting Staff (> N visits)
+    title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
     type: table
     figures:
-      - title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
-        header:
+      - header:
           - escort
           - visits
         values:
@@ -301,10 +301,10 @@ plots:
 
   F:
     name: Count by Hour
+    title: Visits by Hour
     type: bar
     figures:
-      - title: Visits by Hour
-        x: time
+      - x: time
         y: count
         text: count
         color: time
@@ -322,10 +322,10 @@ plots:
 
   G:
     name: Count by Day-of-Week
+    title: Visits by Weekday
     type: bar
     figures:
-      - title: Visits by Weekday
-        x: day
+      - x: day
         y: count
         text: count
         color: day
@@ -344,10 +344,10 @@ plots:
 
   H:
     name: (Distinct) Count by Grade Level
+    title: Visits by Grade Level
     type: bar
     figures:
-      - title: Visits by Grade Level
-        x: grade_label
+      - x: grade_label
         y: count
         text: count
         color: grade_label
@@ -390,10 +390,10 @@ plots:
 
   I:
     name: Count by Entry Zone-of-Regulation
+    title: Zones of Reg. at Entry
     type: pie
     figures:
-      - title: Zones of Reg. at Entry
-        names: zor_entry
+      - names: zor_entry
         values: count
         color: zor_entry
         color_discrete_map: *ZOR_COLOR_MAPPING
@@ -411,10 +411,10 @@ plots:
 
   J:
     name: Count by Exit Zone-of-Regulation
+    title: Zones of Reg. at Exit
     type: pie
     figures:
-      - title: Zones of Reg. at Exit
-        names: zor_exit
+      - names: zor_exit
         values: count
         color: zor_exit
         color_discrete_map: *ZOR_COLOR_MAPPING
