@@ -35,8 +35,6 @@ figure_helpers:
 
   PIE_CHART_LAYOUT: &PIE_CHART_LAYOUT
     showlegend: False
-    title_x: 0.5
-    title_y: 0.5
 
   PIE_CHART_TRACES: &PIE_CHART_TRACES
     hoverinfo: label+percent
@@ -372,11 +370,10 @@ figures:
       order by grade_level_order
 
   Count by Entry Zone-of-Regulation:
-    title: ~
+    title: ZOR Entry
     type: pie
     figures:
-      - title: Zones of Reg. at Entry
-        names: zor_entry
+      - names: zor_entry
         values: count
         color: zor_entry
         color_discrete_map: *ZOR_COLOR_MAPPING
@@ -393,11 +390,10 @@ figures:
       order by 1
 
   Count by Exit Zone-of-Regulation:
-    title: ~
+    title: ZOR Exit
     type: pie
     figures:
-      - title: Zones of Reg. at Exit
-        names: zor_exit
+      - names: zor_exit
         values: count
         color: zor_exit
         color_discrete_map: *ZOR_COLOR_MAPPING
