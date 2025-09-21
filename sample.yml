@@ -42,8 +42,8 @@ figure_helpers:
     textfont_size: 16
 
   ZOR_COLOR_MAPPING: &ZOR_COLOR_MAPPING 
-    red: darkred
-    green: forestgreen
+    red: rgb(215,48,39)  # darkred
+    green: rgb(119, 136, 104)  #forestgreen
     blue: royalblue
     yellow: palegoldenrod
     ~: black
