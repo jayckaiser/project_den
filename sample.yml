@@ -35,11 +35,13 @@ figure_helpers:
 
   PIE_CHART_LAYOUT: &PIE_CHART_LAYOUT
     showlegend: False
+    title_x: 0.5
+    title_y: 0.5
 
   PIE_CHART_TRACES: &PIE_CHART_TRACES
     hoverinfo: label+percent
     textinfo: label+percent+value
-    textfont_size: 16
+    textfont_size: 12
 
   ZOR_COLOR_MAPPING: &ZOR_COLOR_MAPPING 
     red: rgb(215,48,39)  # darkred
@@ -379,10 +381,11 @@ plots:
 
   I:
     name: Count by Entry Zone-of-Regulation
-    title: Zones of Reg. at Entry
+    title: ~
     type: pie
     figures:
-      - names: zor_entry
+      - title: Zones of Reg. at Entry
+        names: zor_entry
         values: count
         color: zor_entry
         color_discrete_map: *ZOR_COLOR_MAPPING
@@ -400,10 +403,11 @@ plots:
 
   J:
     name: Count by Exit Zone-of-Regulation
-    title: Zones of Reg. at Exit
+    title: ~
     type: pie
     figures:
-      - names: zor_exit
+      - title: Zones of Reg. at Exit
+        names: zor_exit
         values: count
         color: zor_exit
         color_discrete_map: *ZOR_COLOR_MAPPING
@@ -434,7 +438,7 @@ poster:
     DEJ
 
   subplot_kwargs:
-    row_heights: [0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2]
+    row_heights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2]
     column_widths: [0.3, 0.3, 0.4]
     vertical_spacing: 0.05
 
