@@ -30,5 +30,5 @@ for plot_index, plot_config in configs['plots'].items():
     # plot.show()
 
 logging.info("Building poster from figures and layout...")
-layout_repr = configs["layout"]
-poster = poster2.build_poster_from_layout(layout_repr, figure_map)
+poster = poster2.build_poster(figure_map, **configs['poster'])
+poster.show()

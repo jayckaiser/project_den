@@ -6,12 +6,12 @@ import pandas as pd
 from collections import Counter
 from plotly.subplots import make_subplots
 
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 
-def get_spans_from_layout(layout: 'np.array') -> Tuple[Dict[str, int], Dict[str, int]]:
+def get_spans_from_design(design: 'np.array') -> Tuple[Dict[str, int], Dict[str, int]]:
     """
-    Get row and column spans from layout array.
+    Get row and column spans from design array.
 
     AABB
     AACD
@@ -24,12 +24,12 @@ def get_spans_from_layout(layout: 'np.array') -> Tuple[Dict[str, int], Dict[str,
     colspan_map = {}
 
     # Iterate the rows and columns separately, using the same logic
-    for col in layout:
+    for col in design:
         counter = Counter(col)
         for idx, count in counter.items():
             colspan_map[idx] = count
 
-    for row in layout.T:
+    for row in design.T:
         counter = Counter(row)
         for idx, count in counter.items():
             rowspan_map[idx] = count
@@ -37,9 +37,14 @@ def get_spans_from_layout(layout: 'np.array') -> Tuple[Dict[str, int], Dict[str,
     return rowspan_map, colspan_map
 
 
-def build_poster_from_layout(layout_repr: str, figure_map: Dict[str, 'Figure']):
+def build_poster(
+    figure_map: Dict[str, 'Figure'],
+    design: str,
+    layout: Optional[dict] = None,
+    subplot_kwargs: Optional[dict] = None
+):
     """
-    Convert text representation of layout into complete poster.
+    Convert text representation of design into complete poster.
 
     Plotly builds subplots using four elements:
     - Specs:  Represent the plots using primary (i.e., upperleft-most) indexes and nulls
@@ -55,34 +60,34 @@ def build_poster_from_layout(layout_repr: str, figure_map: Dict[str, 'Figure']):
                         D: (2,4)   D: (1,1)
                         E: (3,1)   E: (1,4)
 
-    Raise an error if any of the layout indexes are absent from figure mapping.
+    Raise an error if any of the design indexes are absent from figure mapping.
     TODO: Raise an error if an irregular index shape is passed. (e.g., L-shape).
     """
-    ### Prepare artifacts using layout and figures
-    # Clean up the layout and convert to a dataframe
-    layout = [
+    ### Prepare artifacts using design and figures
+    # Clean up the design and convert to a dataframe
+    design = [
         list(row.strip())
-        for row in layout_repr.strip().split("\n")
+        for row in design.strip().split("\n")
     ]
-    layout = np.array(layout)
-    num_rows, num_cols = layout.shape
+    design = np.array(design)
+    num_rows, num_cols = design.shape
 
     # Warn if unknown figures are referenced
-    distinct_indexes = np.unique(layout)  # Also used for title order
+    distinct_indexes = np.unique(design)  # Also used for title order
     for idx in distinct_indexes:
         if idx not in figure_map:
-            logging.error(f"Figure index {idx} defined in layout but missing in figure mapping!")
+            logging.error(f"Figure index {idx} defined in design but missing in figure mapping!")
             exit(1)
 
     # Generate the spans (no figure information required)
-    rowspan_map, colspan_map = get_spans_from_layout(layout)
+    rowspan_map, colspan_map = get_spans_from_design(design)
 
     # Generate the specs and traces
     plot_specs_array = []  # Shape the array at the end
     plot_trace_map = {}
     already_processed = set()
 
-    for array_idx, fig_idx in enumerate(layout.flat):
+    for array_idx, fig_idx in enumerate(design.flat):
         
         if fig_idx in already_processed:
             plot_specs_array.append(None)
@@ -105,9 +110,9 @@ def build_poster_from_layout(layout_repr: str, figure_map: Dict[str, 'Figure']):
         )
 
     # Reshape the specs into a 2D array
-    plot_specs = np.reshape(plot_specs_array, shape=layout.shape).tolist()
+    plot_specs = np.reshape(plot_specs_array, shape=design.shape).tolist()
 
-    # Collect the figure titles in order of appearance in layout
+    # Collect the figure titles in order of appearance in design
     # (Assume titles are defined in first data trace of each figure)
     subplot_titles = [
         figure_map[idx].title
@@ -118,7 +123,8 @@ def build_poster_from_layout(layout_repr: str, figure_map: Dict[str, 'Figure']):
     poster = make_subplots(
         rows=num_rows, cols=num_cols,
         subplot_titles=subplot_titles,
-        specs=plot_specs
+        specs=plot_specs,
+        **subplot_kwargs
     )
 
     for idx, plot in figure_map.items():
@@ -126,5 +132,9 @@ def build_poster_from_layout(layout_repr: str, figure_map: Dict[str, 'Figure']):
             row = plot_trace_map[idx][0]
             col = plot_trace_map[idx][1]
             poster.add_trace(trace, row=row, col=col)
+
+    # Optional formatting
+    if layout:
+        poster.update_layout(**layout)
 
     return poster

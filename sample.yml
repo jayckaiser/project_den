@@ -1,5 +1,6 @@
 variables:
   PATH_TO_DATA: "./data/FINAL_SampleData.csv"
+  POSTER_TITLE: Tito's Den Visit Overview
 
   FREQ_VISIT_COUNT: 5
   STAFF_ESCORT_COUNT: 5
@@ -7,9 +8,9 @@ variables:
   LONG_VISIT_LENGTH_MIN: 20
 
 
-# Ignore the variables defined in here.
-# They make defining plots cleaner.
-plot_helpers:
+# These variables make it cleaner to set up configs for plots and posters.
+# Edit these with caution!
+figure_helpers:
   COLOR_PALETTE: &COLOR_PALETTE  # Fall
     - rgb(61, 89, 65)
     - rgb(119, 136, 104)
@@ -150,18 +151,6 @@ datasets:
   # TODO: Inject filters on time and grade level
   poster_data: |
     select * from visit_data
-
-
-layout: |
-
-  AAF
-  BBF
-  CCG
-  CCG
-  DEH
-  DEH
-  DEI
-  DEJ
 
 
 plots:
@@ -429,3 +418,30 @@ plots:
       where zor_exit is not null
       group by all
       order by 1
+
+
+poster:
+
+  design: |
+
+    AAF
+    BBF
+    CCG
+    CCG
+    DEH
+    DEH
+    DEI
+    DEJ
+
+  subplot_kwargs:
+    row_heights: [0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2]
+    column_widths: [0.3, 0.3, 0.4]
+    vertical_spacing: 0.05
+
+  layout:
+    title_text: "{{ POSTER_TITLE }}"
+    title_font_size: 24
+    autosize: False
+    height: 1150
+    width: 1275
+    showlegend: False
