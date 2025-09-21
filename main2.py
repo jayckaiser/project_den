@@ -27,8 +27,8 @@ for fig_name, fig_config in configs['figures'].items():
     fig = figure.Figure(**fig_config)
     figures[fig_name] = fig
     logging.debug(f"Figure created: {fig_name}")
-    # fig.show()
 
+# Combine figures into each poster.
 logging.info("Building poster from figures and layout...")
 for poster_name, poster_kwargs in configs['posters'].items():
     poster = poster2.build_poster(figures=figures, **poster_kwargs)

@@ -21,7 +21,8 @@ class Figure:
         data: List[dict],
         title: Optional[str] = None,
         layout: Optional[dict] = None,
-        traces: Optional[dict] = None
+        traces: Optional[dict] = None,
+        show: bool = False
     ):
         self.type = type
         self.title = title
@@ -41,6 +42,10 @@ class Figure:
             self.figure.update_layout(**layout)
         if traces:
             self.figure.update_traces(**traces)
+
+        # Show the figure immediately if specified
+        if show:
+            self.show()
 
     @property
     def data(self):
