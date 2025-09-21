@@ -6,7 +6,7 @@ from project_den import figure, poster, util
 logging.basicConfig(level=logging.INFO)
 
 
-PATH_TO_CONFIGS: str = "./sample.yml"
+PATH_TO_CONFIGS: str = "./titos_den.yml"
 
 
 # Parse YAML configs, using a second pass to inject Jinja variables.
