@@ -17,13 +17,12 @@ class Figure:
         raise NotImplementedError(f"! Figure type `{type}` is undefined!")
 
     def __init__(self,
-        name: str, sql: str, type: str,
+        sql: str, type: str,
         figures: List[dict],
         title: Optional[str] = None,
         layout: Optional[dict] = None,
         traces: Optional[dict] = None
     ):
-        self.name = name
         self.type = type
         self.title = title
 

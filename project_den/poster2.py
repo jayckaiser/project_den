@@ -38,8 +38,9 @@ def get_spans_from_design(design: 'np.array') -> Tuple[Dict[str, int], Dict[str,
 
 
 def build_poster(
-    figure_map: Dict[str, 'Figure'],
     design: str,
+    figures: Dict[str, 'Figure'],  # Map figure name to figure
+    figure_map: Dict[str, str],  # Map design idx to figure name
     layout: Optional[dict] = None,
     subplot_kwargs: Optional[dict] = None
 ):
@@ -78,6 +79,15 @@ def build_poster(
             logging.error(f"Figure index {idx} defined in design but missing in figure mapping!")
             exit(1)
 
+    # Build a mapping from design indexes to figures
+    idx_to_figure_map = {}
+    for idx, figure_name in figure_map.items():
+        figure = figures.get(figure_name)
+        if not figure:
+            logging.error(f"Figure name {figure_name} not defined!")
+            exit(1)
+        idx_to_figure_map[idx] = figure
+
     # Generate the spans (no figure information required)
     rowspan_map, colspan_map = get_spans_from_design(design)
 
@@ -95,7 +105,7 @@ def build_poster(
         
         # Update specs
         spec = {
-            'type': figure_map[fig_idx].type,
+            'type': idx_to_figure_map[fig_idx].type,
             'rowspan': rowspan_map[fig_idx],
             'colspan': colspan_map[fig_idx]
         }
@@ -110,7 +120,7 @@ def build_poster(
         )
 
         # Update titles
-        subplot_titles.append(figure_map[fig_idx].title)
+        subplot_titles.append(idx_to_figure_map[fig_idx].title)
 
     # Reshape the specs into a 2D array
     subplot_specs = np.reshape(subplot_specs_array, shape=design.shape).tolist()
@@ -123,7 +133,7 @@ def build_poster(
         **subplot_kwargs
     )
 
-    for idx, plot in figure_map.items():
+    for idx, plot in idx_to_figure_map.items():
         for trace in plot.figure.data:
             row = subplot_trace_map[idx][0]
             col = subplot_trace_map[idx][1]

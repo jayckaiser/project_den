@@ -21,14 +21,14 @@ for dataset_name, dataset_sql in configs["datasets"].items():
     logging.debug(f"Dataset created: {dataset_name}\n{dataset[:5]}")
 
 # Parse each of the poster plots into figures.
-logging.info("Creating plots...")
-figure_map = {}
-for plot_index, plot_config in configs['plots'].items():
-    plot = figure.Figure(**plot_config)
-    figure_map[plot_index] = plot
-    logging.debug(f"Plot created at index {plot_index}: {plot.name}")
-    # plot.show()
+logging.info("Creating figures...")
+figures = {}
+for fig_name, fig_config in configs['figures'].items():
+    fig = figure.Figure(**fig_config)
+    figures[fig_name] = fig
+    logging.debug(f"Figure created: {fig_name}")
+    # fig.show()
 
 logging.info("Building poster from figures and layout...")
-poster = poster2.build_poster(figure_map, **configs['poster'])
+poster = poster2.build_poster(figures=figures, **configs['poster'])
 poster.show()

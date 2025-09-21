@@ -155,10 +155,9 @@ datasets:
     select * from visit_data
 
 
-plots:
+figures:
 
-  A:
-    name: Total Visit Count
+  Total Visit Count:
     title: ~  # No title
     type: table
     figures:
@@ -178,8 +177,7 @@ plots:
         round(avg(visit_length_sec) / 60, 1) as avg_visit_min,
       from poster_data
 
-  B:
-    name: Top N Busiest Days
+  Top N Busiest Days:
     title: Top {{ SHOW_TOP }} busiest days
     type: table
     figures:
@@ -198,8 +196,7 @@ plots:
 
   # Find all student whos, over the last three months,
   # have attended the den at least {{ FREQ_VISIT_COUNT }} times.
-  C:
-    name: MTSS Cut Score
+  MTSS Cut Score:
     title: MTSS Flag
     type: table
     figures:
@@ -244,8 +241,7 @@ plots:
          and month_3_count >= {{ FREQ_VISIT_COUNT }}
       order by 5 desc, 4 desc, 3 desc
 
-  D:
-    name: High Flyers (> N visits)
+  High Flyers (> N visits):
     title: High flyers (n > {{ FREQ_VISIT_COUNT }})
     type: table
     figures:
@@ -269,8 +265,7 @@ plots:
       having count >= {{ FREQ_VISIT_COUNT }}
       order by 4 desc, 2
   
-  E:
-    name: Escorting Staff (> N visits)
+  Escorting Staff (> N visits):
     title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
     type: table
     figures:
@@ -290,8 +285,7 @@ plots:
       having count >= {{ STAFF_ESCORT_COUNT }}
       order by 2 desc, 1
 
-  F:
-    name: Count by Hour
+  Count by Hour:
     title: Visits by Hour
     type: bar
     figures:
@@ -311,8 +305,7 @@ plots:
       group by all
       order by 1
 
-  G:
-    name: Count by Day-of-Week
+  Count by Day-of-Week:
     title: Visits by Weekday
     type: bar
     figures:
@@ -333,8 +326,7 @@ plots:
       group by all
       order by 1
 
-  H:
-    name: (Distinct) Count by Grade Level
+  Count by Grade Level:
     title: Visits by Grade Level
     type: bar
     figures:
@@ -379,8 +371,7 @@ plots:
       group by all
       order by grade_level_order
 
-  I:
-    name: Count by Entry Zone-of-Regulation
+  Count by Entry Zone-of-Regulation:
     title: ~
     type: pie
     figures:
@@ -401,8 +392,7 @@ plots:
       group by all
       order by 1
 
-  J:
-    name: Count by Exit Zone-of-Regulation
+  Count by Exit Zone-of-Regulation:
     title: ~
     type: pie
     figures:
@@ -436,6 +426,18 @@ poster:
     DEH
     DEI
     DEJ
+
+  figure_map:
+    A: Total Visit Count
+    B: Top N Busiest Days
+    C: MTSS Cut Score
+    D: High Flyers (> N visits)
+    E: Escorting Staff (> N visits)
+    F: Count by Hour
+    G: Count by Day-of-Week
+    H: Count by Grade Level
+    I: Count by Entry Zone-of-Regulation
+    J: Count by Exit Zone-of-Regulation
 
   subplot_kwargs:
     row_heights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2]
