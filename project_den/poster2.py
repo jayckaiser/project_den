@@ -42,7 +42,8 @@ def build_poster(
     figures: Dict[str, 'Figure'],  # Map figure name to figure
     figure_map: Dict[str, str],  # Map design idx to figure name
     layout: Optional[dict] = None,
-    subplot_kwargs: Optional[dict] = None
+    subplot_kwargs: Optional[dict] = None,
+    show: bool = False
 ):
     """
     Convert text representation of design into complete poster.
@@ -142,5 +143,9 @@ def build_poster(
     # Optional formatting
     if layout:
         poster.update_layout(**layout)
+
+     # Show the poster immediately if specified
+    if show:
+        poster.show()
 
     return poster

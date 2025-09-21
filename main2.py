@@ -33,4 +33,4 @@ logging.info("Building poster from figures and layout...")
 for poster_name, poster_kwargs in configs['posters'].items():
     poster = poster2.build_poster(figures=figures, **poster_kwargs)
     logging.debug(f"Poster created: {poster_name}")
-    poster.show()
+

@@ -413,6 +413,7 @@ figures:
 posters:
 
   Monthly Report:
+    show: True
 
     design: |
 
