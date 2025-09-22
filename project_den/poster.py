@@ -6,7 +6,7 @@ import pandas as pd
 from collections import Counter
 from plotly.subplots import make_subplots
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 def get_spans_from_design(design: 'np.array') -> Tuple[Dict[str, int], Dict[str, int]]:
@@ -35,6 +35,29 @@ def get_spans_from_design(design: 'np.array') -> Tuple[Dict[str, int], Dict[str,
             rowspan_map[idx] = count
 
     return rowspan_map, colspan_map
+
+
+def get_annotation_text(annotation: dict, figures: List['Figure']):
+    """
+    Annotations can be built dynamically using a TextFigure raw text.
+    """
+    # Simple case: raw text
+    if 'text' in annotation:
+        return annotation['text']
+    
+    # Advanced case: dynamic text through a TextFigure
+    fig_name = annotation['figure']
+    
+    if fig_name not in figures:
+        logging.error(f"Annotation figure name {fig_name} not defined!")
+        exit(1)
+    
+    fig = figures[fig_name]
+    if fig.type != 'text':
+        logging.error(f"Annotation figure must be type `text`!")
+        exit(1)
+
+    return fig.text
 
 
 def build_poster(
@@ -148,28 +171,10 @@ def build_poster(
         poster.update_layout(**layout)
 
     # Optional annotations
-    # {figure, layout} or (text, layout)
     if annotations:
         for annotation in annotations:
-
-            # Choice of text figure or raw text
-            if 'figure' in annotation:
-                fig_name = annotation['figure']
-                
-                if fig_name not in figures:
-                    logging.error(f"Annotation figure name {fig_name} not defined!")
-                    exit(1)
-                
-                fig = figures[fig_name]
-                if fig.type != 'text':
-                    logging.error(f"Annotation figure must be type `text`!")
-                    exit(1)
-
-                fig_text = fig.text
-            
-            else:
-                fig_text = annotation['text']
-
+            # {figure, layout} or (text, layout)
+            fig_text = get_annotation_text(annotation, figures)
             poster.add_annotation(text=fig_text, **annotation['layout'])
 
      # Show the poster immediately if specified
