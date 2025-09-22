@@ -469,6 +469,7 @@ posters:
       width: 1275
       height: 1650
       showlegend: False
+      barmode: overlay  # Default behavior is side-by-side
 
     annotations:
       - figure: Entry ZOR Null Count
