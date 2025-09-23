@@ -1,6 +1,7 @@
 variables:
   PATH_TO_DATA: "./data/FINAL_SampleData.csv"
   POSTER_TITLE: Tito's Den Visit Overview
+  WHERE_CLAUSE: "TRUE"
 
   FREQ_VISIT_COUNT: 5
   STAFF_ESCORT_COUNT: 5
@@ -159,7 +160,7 @@ datasets:
 
   # TODO: Inject filters on time and grade level
   poster_data: |
-    select * from visit_data
+    select * from visit_data where {{ WHERE_CLAUSE }}
 
 
 figures:
