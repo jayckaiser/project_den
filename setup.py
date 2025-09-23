@@ -12,7 +12,7 @@ with open(os.path.join(HERE, 'requirements.txt'), encoding='utf-8') as fp:
 setuptools.setup (
     name = 'project_den',
     description = 'Transforms Project DEN time-in and time-out data into a dashboard visualization.',
-    version = '0.0.1',
+    version = '0.1.0',
     packages = setuptools.find_namespace_packages(include=['project_den', 'project_den.*']),
     include_package_data=True,
     install_requires = all_reqs,
@@ -28,5 +28,9 @@ setuptools.setup (
     classifiers = [
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
-    ]
+    ],
+    entry_points = '''
+        [console_scripts]
+        project_den=project_den.__main__:main
+    ''',
 )
