@@ -2,6 +2,7 @@ variables:
   PATH_TO_DATA: "./data/FINAL_SampleData.csv"
   POSTER_TITLE: Tito's Den Visit Overview
   WHERE_CLAUSE: "TRUE"
+  POSTER_WRITE_PATH: "./images/monthly_report.html"
 
   FREQ_VISIT_COUNT: 5
   STAFF_ESCORT_COUNT: 5
@@ -441,7 +442,7 @@ posters:
 
   Monthly Report:
     show: True
-    write_path: "./images/monthly_report.html"
+    write_path: "{{ POSTER_WRITE_PATH }}"
 
     design: |
 
