@@ -20,6 +20,15 @@ figure_helpers:
     - rgb(222, 138, 90)
     - rgb(202, 86, 44)
 
+  COLOR_PALETTE_DARK: &COLOR_PALETTE_DARK  # Fall
+    - rgb(41, 69, 45)
+    - rgb(99, 116, 84)
+    - rgb(161, 165, 125)
+    - rgb(226, 217, 169)
+    - rgb(217, 167, 118)
+    - rgb(202, 118, 70)
+    - rgb(182, 66, 24)
+
   TABLE_TRACES: &TABLE_TRACES
     cells_font:
       size: 12
@@ -337,7 +346,7 @@ figures:
         y: num_students
         text: num_students
         color: grade_label
-        color_discrete_sequence: *COLOR_PALETTE
+        color_discrete_sequence: *COLOR_PALETTE_DARK
     layout:
       barmode: overlay  # Default behavior is side-by-side
       <<: *BAR_PLOT_LAYOUT
