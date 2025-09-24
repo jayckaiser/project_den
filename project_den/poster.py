@@ -150,7 +150,7 @@ def build_poster(
         subplot_titles.append(idx_to_figure_map[fig_idx].title)
 
     # Reshape the specs into a 2D array
-    subplot_specs = np.reshape(subplot_specs_array, shape=design.shape).tolist()
+    subplot_specs = np.array(subplot_specs_array).reshape(design.shape).tolist()
 
     ### Build the poster using the generated artifacts 
     poster = make_subplots(
