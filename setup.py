@@ -14,6 +14,7 @@ setuptools.setup (
     description = 'Transforms Project DEN time-in and time-out data into a dashboard visualization.',
     version = '0.1.0',
     packages = setuptools.find_namespace_packages(include=['project_den', 'project_den.*']),
+    package_data={'project_den': ['*.yml']},
     include_package_data=True,
     install_requires = all_reqs,
     python_requires = '>=3',
