@@ -1,7 +1,6 @@
 import argparse
+import importlib
 import logging
-import os
-import pathlib
 import yaml
 
 from project_den import figure, poster, util
@@ -25,11 +24,12 @@ def main():
         epilog=epilog
     )
 
+    package_resources = importlib.resources.files("projects")
     parser.add_argument("-c", "--config",
         nargs="?",
         type=str,
         help="Specify YAML config file where datasets, figures, and posters are defined",
-        default=os.path.join(pathlib.Path(__file__).parent.parent, "titos_den.yml")
+        default=package_resources.joinpath("titos_den.yml")
     )
 
     parser.add_argument("-v", "--variables",

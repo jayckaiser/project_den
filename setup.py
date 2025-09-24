@@ -13,19 +13,23 @@ setuptools.setup (
     name = 'project_den',
     description = 'Transforms Project DEN time-in and time-out data into a dashboard visualization.',
     version = '0.1.0',
+
     packages = setuptools.find_namespace_packages(include=['project_den', 'project_den.*']),
     package_data={'project_den': ['*.yml']},
     include_package_data=True,
+
     install_requires = all_reqs,
+    dependency_links = all_reqs,
     python_requires = '>=3',
+
     author = "Jay Kaiser",
+    author_email = 'jayckaiser@gmail.com',
+    url = 'https://github.com/jayckaiser/project_den',
     keyword = "data, transformation",
     long_description = README,
     long_description_content_type = "text/markdown",
     license = 'Apache 2.0',
-    url = 'https://github.com/jayckaiser/project_den',
-    dependency_links = all_reqs,
-    author_email = 'jayckaiser@gmail.com',
+    
     classifiers = [
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
