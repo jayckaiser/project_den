@@ -24,12 +24,12 @@ def main():
         epilog=epilog
     )
 
-    package_resources = importlib.resources.files("projects")
+    package_resources = importlib.resources.files("project_den")
     parser.add_argument("-c", "--config",
         nargs="?",
         type=str,
         help="Specify YAML config file where datasets, figures, and posters are defined",
-        default=package_resources.joinpath("titos_den.yml")
+        default=package_resources.joinpath("projects", "titos_den.yml")
     )
 
     parser.add_argument("-v", "--variables",
