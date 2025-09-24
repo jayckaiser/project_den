@@ -44,6 +44,8 @@ def time_filter(years: List[int], months: List[int]) -> str:
     school_year IN ('{year_str}')
     AND MONTH(visit_date) IN ('{month_str}')
     """
+    import calendar
+
     # Force to strings for easy-joining.
     years = list(map(str, years))
     months = list(map(str, months))
