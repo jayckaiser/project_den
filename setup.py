@@ -15,7 +15,7 @@ setuptools.setup (
     version = '0.1.0',
 
     packages = setuptools.find_namespace_packages(include=['project_den', 'project_den.*']),
-    package_data={'project_den': ['*.yml']},
+    package_data={'project_den': ['projects/*.yml']},
     include_package_data=True,
 
     install_requires = all_reqs,
