@@ -383,6 +383,25 @@ figures:
       group by all
       order by grade_level_order
 
+  Count by Month:
+    title: Visits by Month
+    type: bar
+    data:
+      - x: month
+        y: count
+        text: count
+        color: month
+        color_discrete_sequence: *COLOR_PALETTE
+    layout: *BAR_PLOT_LAYOUT
+    traces: *BAR_PLOT_TRACES
+    sql: |
+      select
+        strftime(visit_date, '%Y-%m') as month,
+        count(*) as count
+      from poster_data
+      group by all
+      order by 1
+
   Count by Entry Zone-of-Regulation:
     title: ZOR Entry
     type: pie
@@ -443,7 +462,7 @@ figures:
 
 posters:
 
-  Monthly Report:
+  Monthly Report: &monthly_report
     show: "{{ SHOW_POSTERS }}"
     write_path: "{{ POSTER_WRITE_PATH }}"
 
@@ -458,7 +477,7 @@ posters:
       DEI
       DEJ
 
-    figure_map:
+    figure_map: &monthly_figure_map
       A: Total Visit Count
       B: Top N Busiest Days
       C: MTSS Cut Score
@@ -475,7 +494,7 @@ posters:
       column_widths: [0.3, 0.3, 0.4]
       vertical_spacing: 0.05
 
-    layout:
+    layout: &monthly_layout
       title_text: "{{ POSTER_TITLE }}"
       title_font_size: 24
       autosize: False
@@ -500,3 +519,30 @@ posters:
           x: 1.0
           y: 0.0
           showarrow: False
+
+
+  # Identical to Monthly Report
+  # Replace "Count by Grade Level" with "Count by Month"
+  Overview by Student/Staff:
+    show: True
+    
+    design: |
+
+      AAF
+      BBF
+      CCG
+      CCG
+      DEK
+      DEK
+      DEI
+      DEJ
+
+    figure_map:
+      K: Count by Month
+      <<: *monthly_figure_map
+
+    layout:
+      barmode: group  # This shouldn't be necessary.
+      <<: *monthly_layout
+
+    <<: *monthly_report
