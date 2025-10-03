@@ -99,15 +99,16 @@ def build_poster(
     design = np.array(design)
     num_rows, num_cols = design.shape
 
+    # Build a mapping from design indexes to figures
     # Warn if unknown figures are referenced
+    idx_to_figure_map = {}
+
     for idx in np.unique(design):
-        if idx not in figure_map:
+        figure_name = figure_map.get(idx)
+        if not figure_name:
             logging.error(f"Figure index {idx} defined in design but missing in figure mapping!")
             exit(1)
 
-    # Build a mapping from design indexes to figures
-    idx_to_figure_map = {}
-    for idx, figure_name in figure_map.items():
         figure = figures.get(figure_name)
         if not figure:
             logging.error(f"Figure name {figure_name} not defined!")
