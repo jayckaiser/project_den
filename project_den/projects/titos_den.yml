@@ -1,0 +1,548 @@
+variables:
+  PATH_TO_DATA: "./data/FINAL_SampleData.csv"
+  POSTER_WRITE_PATH: "./images/monthly_report.html"
+  
+  POSTER_TITLE: Tito's Den Visit Overview
+  WHERE_CLAUSE: "TRUE"
+
+  SHOW_POSTERS: True
+
+  FREQ_VISIT_COUNT: 5
+  STAFF_ESCORT_COUNT: 5
+  SHOW_TOP: 5
+  LONG_VISIT_LENGTH_MIN: 20
+
+
+# These variables make it cleaner to set up configs for plots and posters.
+# Edit these with caution!
+figure_helpers:
+  COLOR_PALETTE: &COLOR_PALETTE  # Fall
+    - rgb(61, 89, 65)
+    - rgb(119, 136, 104)
+    - rgb(181, 185, 145)
+    - rgb(246, 237, 189)
+    - rgb(237, 187, 138)
+    - rgb(222, 138, 90)
+    - rgb(202, 86, 44)
+
+  COLOR_PALETTE_DARK: &COLOR_PALETTE_DARK  # Fall
+    - rgb(41, 69, 45)
+    - rgb(99, 116, 84)
+    - rgb(161, 165, 125)
+    - rgb(226, 217, 169)
+    - rgb(217, 167, 118)
+    - rgb(202, 118, 70)
+    - rgb(182, 66, 24)
+
+  TABLE_TRACES: &TABLE_TRACES
+    cells_font:
+      size: 12
+
+  BAR_PLOT_LAYOUT: &BAR_PLOT_LAYOUT
+    yaxis: {tickformat: d}
+    showlegend: False
+    xaxis_title: ~
+    yaxis_title: ~
+
+  BAR_PLOT_TRACES: &BAR_PLOT_TRACES
+    textfont_size: 16
+
+  PIE_CHART_LAYOUT: &PIE_CHART_LAYOUT
+    showlegend: False
+
+  PIE_CHART_TRACES: &PIE_CHART_TRACES
+    hoverinfo: label+percent
+    textinfo: label+percent+value
+    textfont_size: 12
+
+  ZOR_COLOR_MAPPING: &ZOR_COLOR_MAPPING 
+    red: rgb(215,48,39)  # darkred
+    green: rgb(119, 136, 104)  #forestgreen
+    blue: royalblue
+    yellow: palegoldenrod
+    ~: black
+
+
+datasets:
+
+  raw_visit_data: |
+    select * from read_csv(
+      '{{ PATH_TO_DATA }}',
+      union_by_name=True,
+      nullstr='N/A',
+      filename=True,
+      auto_detect=True
+    )
+
+  visit_data: |
+    select
+        -- Datetime columns
+        try_strptime("Date of Visit"::text, ['%Y-%m-%d', '%Y-%m-%d %H:%M:%S'])::date as visit_date,
+
+        CASE WHEN MONTH(visit_date) >= 9
+            THEN YEAR(visit_date) + 1
+            ELSE YEAR(visit_date)
+        END::text AS school_year,
+
+        try_strptime(concat("visit_date", ' ', "Time in"), ['%Y-%m-%d %H:%M:%S %p', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']) as raw_time_in,
+        try_strptime(concat("visit_date", ' ', "Time out"), ['%Y-%m-%d %H:%M:%S %p', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M']) as raw_time_out,
+
+        -- This section fixes input-mistake where AM and PM is chosen incorrectly.
+        CASE
+            WHEN HOUR("raw_time_in") < 7
+                THEN "raw_time_in" + INTERVAL 12 HOURS
+            WHEN HOUR("raw_time_in") > 16
+                THEN "raw_time_in" - INTERVAL 12 HOURS
+            ELSE "raw_time_in"
+        END AS time_in,
+            
+        CASE
+            WHEN HOUR("raw_time_out") < 7
+                THEN "raw_time_out" + INTERVAL 12 HOURS
+            WHEN HOUR("raw_time_out") > 16
+                THEN "raw_time_out" - INTERVAL 12 HOURS
+            ELSE "raw_time_out"
+        END AS time_out,
+
+        -- Demographics columns
+        "First Name" as first_name_original,
+        "Last Name" as last_name_original,
+
+        lower(regexp_replace( "First Name" , '[^a-zA-Z]', '', 'g')) as first_name,
+        lower(regexp_replace(replace("Last Name", '-', ' '), '[^a-zA-Z]', '', 'g')) as last_name,
+        concat(first_name, ' ', last_name) as full_name,
+        "Grade Level"::text as grade_level,
+
+        -- Setting "unique" IDs
+        array_to_string(flatten([
+
+            -- First Name: Joe -> [J]
+            [substring(upper("first_name"), 1, 1)],  --Cut N Uppercase initials into a list
+
+            -- Last Name: Martinez-Hernandex -> [M, H]
+            list_transform(
+                regexp_split_to_array(upper("last_name"), '[- ]'),  --Split Uppercase by either hyphen or space
+                x -> substring(x, 1, 1)  --Take the first N initials of each name
+            )
+        ]), '') as initials,          -- Joe Martinez-Hernandez -> JMH
+        
+
+        array_to_string(flatten([
+
+            -- First Name: Joe -> [J]
+            [substring(upper("first_name"), 1, 2)],  --Cut N Uppercase initials into a list
+
+            -- Last Name: Martinez-Hernandex -> [M, H]
+            list_transform(
+                regexp_split_to_array(upper("last_name"), '[- ]'),  --Split Uppercase by either hyphen or space
+                x -> substring(x, 1, 2)  --Take the first N initials of each name
+            )
+        ]), '') as program_id_xyear,  -- Joe Martinez-Hernandez -> JOMAHE
+
+        concat(program_id_xyear, grade_level) as program_id,        -- JOMAHE -> JOMAHE4
+
+        -- Metadata columns
+        date_diff('second', time_in, time_out) as visit_length_sec,
+
+        case
+            when "*Zones of Regulation Check* Entry" = '' then null
+            else lower("*Zones of Regulation Check* Entry")
+        end as zor_entry,
+    
+        case
+            when "*Zones of Regulation Check* Exit" = '' then null
+            else lower("*Zones of Regulation Check* Exit")
+        end as zor_exit,
+
+        "Escorting Staff" as staff_name,
+
+        -- External metadata (optional)
+        -- strptime("Timestamp", '%m/%d/%Y %H:%M:%S') as _updated_at,  -- Different format
+        filename as _filepath,
+
+    from raw_visit_data
+
+  # TODO: Inject filters on time and grade level
+  poster_data: |
+    select * from visit_data where {{ WHERE_CLAUSE }}
+
+
+figures:
+
+  Total Visit Count:
+    title: ~  # No title
+    type: table
+    data:
+      - header:
+          - Total Count
+          - Total Count > {{ LONG_VISIT_LENGTH_MIN }} min.
+          - Average Visit Length (min.)
+        values:
+          - count
+          - long_visits
+          - avg_visit_min
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        count(*) as count,
+        count(*) filter (where visit_length_sec >= {{ LONG_VISIT_LENGTH_MIN }} * 60) as long_visits,
+        round(avg(visit_length_sec) / 60, 1) as avg_visit_min,
+      from poster_data
+
+  Top N Busiest Days:
+    title: Top {{ SHOW_TOP }} busiest days
+    type: table
+    data:
+      - header: date
+        values: count
+        pivot: True
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        strftime(visit_date, '%m/%d/%Y') as date,
+        count(*) as count
+      from poster_data
+      group by all
+      order by 2 desc
+      limit {{ SHOW_TOP }}
+
+  # Find all student whos, over the last three months,
+  # have attended the den at least {{ FREQ_VISIT_COUNT }} times.
+  MTSS Cut Score:
+    title: MTSS Flag
+    type: table
+    data:
+      - header:
+          - student
+          - grade
+          - month_1_count
+          - month_2_count
+          - month_3_count
+        values:
+          - program_id
+          - grade_level
+          - month_1_count
+          - month_2_count
+          - month_3_count
+    sql: |
+      with latest_months as (
+        select distinct strftime(visit_date, '%Y-%m') as year_month
+        from poster_data
+        order by year_month DESC
+        limit 3
+      ),
+      joined as (
+        select
+          program_id,
+          grade_level,
+          year_month
+        from poster_data
+          join latest_months
+          on strftime(visit_date, '%Y-%m') = year_month
+      )
+      select
+        program_id,
+        grade_level,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 0) then 1 else 0 end) as month_1_count,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 1) then 1 else 0 end) as month_2_count,
+        sum(case when year_month = (select year_month from latest_months order by year_month desc limit 1 offset 2) then 1 else 0 end) as month_3_count
+      from joined
+      group by all
+      having month_1_count >= {{ FREQ_VISIT_COUNT }}
+         and month_2_count >= {{ FREQ_VISIT_COUNT }}
+         and month_3_count >= {{ FREQ_VISIT_COUNT }}
+      order by 5 desc, 4 desc, 3 desc
+
+  High Flyers (> N visits):
+    title: High flyers (n > {{ FREQ_VISIT_COUNT }})
+    type: table
+    data:
+      - header:
+          - student
+          - grade
+          - visits
+        values:
+          - initials
+          - grade_level
+          - count
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        full_name,
+        initials,
+        grade_level,
+        count(*) as count
+      from poster_data
+      group by all
+      having count >= {{ FREQ_VISIT_COUNT }}
+      order by 4 desc, 2
+  
+  Escorting Staff (> N visits):
+    title: Staff escorts (n > {{ STAFF_ESCORT_COUNT }})
+    type: table
+    data:
+      - header:
+          - escort
+          - visits
+        values:
+          - staff_name
+          - count
+    traces: *TABLE_TRACES
+    sql: |
+      select
+        staff_name,
+        count(*) as count
+      from poster_data
+      group by all
+      having count >= {{ STAFF_ESCORT_COUNT }}
+      order by 2 desc, 1
+
+  Count by Hour:
+    title: Visits by Hour
+    type: bar
+    data:
+      - x: time
+        y: count
+        text: count
+        color: time
+        color_discrete_sequence: *COLOR_PALETTE
+    layout: *BAR_PLOT_LAYOUT
+    traces: *BAR_PLOT_TRACES
+    sql: |
+      select
+        hour(time_in) as hour,
+        strftime(time_in, '%I %p') as time,
+        count(*) as count
+      from poster_data
+      group by all
+      order by 1
+
+  Count by Day-of-Week:
+    title: Visits by Weekday
+    type: bar
+    data:
+      - x: day
+        y: count
+        text: count
+        color: day
+        color_discrete_sequence: *COLOR_PALETTE
+    layout: *BAR_PLOT_LAYOUT
+    traces: *BAR_PLOT_TRACES
+    sql: |
+      select
+        dayofweek(visit_date) as dow,
+        dayname(visit_date) as day,
+        count(*) as count
+      from poster_data
+      where day not in ('Saturday', 'Sunday')
+      group by all
+      order by 1
+
+  Count by Grade Level:
+    title: Visits by Grade Level
+    type: bar
+    data:
+      - x: grade_label
+        y: count
+        text: count
+        color: grade_label
+        color_discrete_sequence: *COLOR_PALETTE
+      - x: grade_label
+        y: num_students
+        text: num_students
+        color: grade_label
+        color_discrete_sequence: *COLOR_PALETTE_DARK
+    layout:
+      barmode: overlay  # Default behavior is side-by-side
+      <<: *BAR_PLOT_LAYOUT
+    traces: *BAR_PLOT_TRACES
+    sql: |
+      select
+        grade_level,
+        case grade_level
+          when 'null' then 'n/a'
+          when '1' then '1st'
+          when '2' then '2nd'
+          when '3' then '3rd'
+          when '4' then '4th'
+          when '5' then '5th'
+          when '6' then '6th'
+          else grade_level
+        end as grade_label,
+
+        case grade_level
+          when 'PK' then -2
+          when 'K' then -1
+          else grade_level::integer
+        end as grade_level_order,
+        
+        count(*) as count,
+        count(distinct(full_name, initials)) as num_students
+      
+      from poster_data
+      group by all
+      order by grade_level_order
+
+  Count by Month:
+    title: Visits by Month
+    type: bar
+    data:
+      - x: month
+        y: count
+        text: count
+        color: month
+        color_discrete_sequence: *COLOR_PALETTE
+    layout: *BAR_PLOT_LAYOUT
+    traces: *BAR_PLOT_TRACES
+    sql: |
+      select
+        strftime(visit_date, '%Y-%m') as month,
+        count(*) as count
+      from poster_data
+      group by all
+      order by 1
+
+  Count by Entry Zone-of-Regulation:
+    title: ZOR Entry
+    type: pie
+    data:
+      - names: zor_entry
+        values: count
+        color: zor_entry
+        color_discrete_map: *ZOR_COLOR_MAPPING
+        hole: 0.5
+    layout: *PIE_CHART_LAYOUT
+    traces: *PIE_CHART_TRACES
+    sql: |
+      select
+        zor_entry,
+        count(*) as count
+      from poster_data
+      where zor_entry is not null
+      group by all
+      order by 1
+
+  Count by Exit Zone-of-Regulation:
+    title: ZOR Exit
+    type: pie
+    data:
+      - names: zor_exit
+        values: count
+        color: zor_exit
+        color_discrete_map: *ZOR_COLOR_MAPPING
+        hole: 0.5
+    layout: *PIE_CHART_LAYOUT
+    traces: *PIE_CHART_TRACES
+    sql: |
+      select
+        zor_exit, 
+        count(*) as count
+      from poster_data
+      where zor_exit is not null
+      group by all
+      order by 1
+
+  # Annotations
+  Entry ZOR Null Count:
+    type: text
+    text: "Total N/A: {count}"
+    sql: |
+      select count(*) as count
+      from poster_data
+      where zor_entry is null
+  
+  Exit ZOR Null Count:
+    type: text
+    text: "Total N/A: {count}"
+    sql: |
+      select count(*) as count
+      from poster_data
+      where zor_exit is null
+
+
+posters:
+
+  Monthly Report: &monthly_report
+    show: "{{ SHOW_POSTERS }}"
+    write_path: "{{ POSTER_WRITE_PATH }}"
+
+    design: |
+
+      AAF
+      BBF
+      CCG
+      CCG
+      DEH
+      DEH
+      DEI
+      DEJ
+
+    figure_map: &monthly_figure_map
+      A: Total Visit Count
+      B: Top N Busiest Days
+      C: MTSS Cut Score
+      D: High Flyers (> N visits)
+      E: Escorting Staff (> N visits)
+      F: Count by Hour
+      G: Count by Day-of-Week
+      H: Count by Grade Level
+      I: Count by Entry Zone-of-Regulation
+      J: Count by Exit Zone-of-Regulation
+
+    subplot_kwargs:
+      row_heights: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2]
+      column_widths: [0.3, 0.3, 0.4]
+      vertical_spacing: 0.05
+
+    layout: &monthly_layout
+      title_text: "{{ POSTER_TITLE }}"
+      title_font_size: 24
+      autosize: False
+      width: 1275
+      height: 1650
+      showlegend: False
+      barmode: overlay  # Default behavior is side-by-side
+
+    annotations:
+      - figure: Entry ZOR Null Count
+        layout:
+          xref: paper
+          yref: paper
+          x: 1.0
+          y: 0.17
+          showarrow: False
+
+      - figure: Exit ZOR Null Count
+        layout:
+          xref: paper
+          yref: paper
+          x: 1.0
+          y: 0.0
+          showarrow: False
+
+
+  # Identical to Monthly Report
+  # Replace "Count by Grade Level" with "Count by Month"
+  Overview by Student/Staff:
+    show: True
+    
+    design: |
+
+      AAF
+      BBF
+      CCG
+      CCG
+      DEK
+      DEK
+      DEI
+      DEJ
+
+    figure_map:
+      K: Count by Month
+      <<: *monthly_figure_map
+
+    layout:
+      barmode: group  # This shouldn't be necessary.
+      <<: *monthly_layout
+
+    <<: *monthly_report
